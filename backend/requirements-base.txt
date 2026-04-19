@@ -1,0 +1,15 @@
+# Core API + integrations (no local Whisper / PyTorch — use full requirements.txt for voice STT).
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+httpx==0.28.1
+python-dotenv==1.0.1
+google-generativeai==0.8.4
+gtts==2.5.4
+langchain-core==0.3.29
+langchain-google-genai==2.0.8
+prophet==1.1.6
+pandas==2.2.3
+numpy==2.1.3
+pillow==11.0.0
+python-multipart==0.0.20
+websockets==14.2

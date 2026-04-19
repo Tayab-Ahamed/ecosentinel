@@ -1,0 +1,2 @@
+# Dev / test only (use with: pip install -r requirements-base.txt -r requirements-dev.txt)
+pytest==8.3.4
