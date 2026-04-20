@@ -11,6 +11,8 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from backend.database import init_db, get_session
+from backend.routers.historical import router as historical_router
 from routers.air_quality import openaq_client, router as air_quality_router
 from routers.fire_data import firms_client, router as fire_data_router
 from routers.prediction import prophet_service, router as prediction_router
@@ -123,6 +125,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(historical_router, prefix="/api")
 app.include_router(air_quality_router, prefix="/api")
 app.include_router(fire_data_router, prefix="/api")
 app.include_router(waste_vision_router, prefix="/api")
@@ -147,7 +150,7 @@ async def unhandled_exception_handler(_: Any, exc: Exception) -> JSONResponse:
 
 @app.on_event("startup")
 async def startup_event() -> None:
-    """Initialize all service clients and expose startup readiness state."""
+    """Initialize all service clients, DB, and expose startup readiness state."""
     try:
         # Re-load env and warm client config fields at startup.
         load_dotenv(override=False)
@@ -161,12 +164,15 @@ async def startup_event() -> None:
         )
         whisper_ready = False if skip_whisper else await whisper_client.initialize_model()
 
+        await init_db()
+
         app.state.clients_ready = {
             "openaq": bool(openaq_client.api_key),
             "firms": bool(firms_client.api_key),
             "gemini": bool(gemini_client.api_key),
             "whisper": whisper_ready,
             "prophet": ProphetModelService.is_prophet_available(),
+            "database": True,
         }
         app.state.started_at = datetime.now(UTC).isoformat()
     except Exception as exc:
@@ -186,9 +192,11 @@ async def shutdown_event() -> None:
 
 
 @app.get("/health", tags=["system"])
-async def health_check() -> dict[str, Any]:
+async def health_check(session: AsyncSession = Depends(get_session)) -> dict[str, Any]:
     """Return service health and client readiness status."""
     try:
+        # Test DB connection
+        await session.exec("SELECT 1")
         return {
             "status": "ok",
             "timestamp": datetime.now(UTC).isoformat(),

@@ -12,6 +12,11 @@ import type {
   WasteHotspotProperties,
 } from "@/lib/api";
 import { ecoApi } from "@/lib/api";
+import {
+  DEMO_AIR_READINGS,
+  DEMO_FIRES_INDIA,
+  DEMO_WASTE_HOTSPOTS,
+} from "@/lib/demo-data";
 import { formatLocalTime, getPm25Category, getPm25Color } from "@/lib/environment";
 import { MapIcon, RefreshIcon } from "@/components/icons";
 
@@ -19,6 +24,8 @@ interface EcoMapProps {
   lat: number;
   lon: number;
   className?: string;
+  /** When true, show sample layers (no live OpenAQ/FIRMS). */
+  demoMode?: boolean;
 }
 
 const wasteMarker = divIcon({
@@ -38,7 +45,7 @@ function RecenterMap({ lat, lon }: { lat: number; lon: number }) {
   return null;
 }
 
-export function EcoMap({ lat, lon, className }: EcoMapProps) {
+export function EcoMap({ lat, lon, className, demoMode = false }: EcoMapProps) {
   const [airReadings, setAirReadings] = useState<AirQualityReading[]>([]);
   const [fireFeatures, setFireFeatures] =
     useState<FeatureCollection<FireFeatureProperties> | null>(null);
@@ -55,6 +62,13 @@ export function EcoMap({ lat, lon, className }: EcoMapProps) {
   const fetchMapData = useCallback(async () => {
     setLoading(true);
     try {
+      if (demoMode) {
+        setAirReadings(DEMO_AIR_READINGS);
+        setFireFeatures(DEMO_FIRES_INDIA);
+        setWasteFeatures(DEMO_WASTE_HOTSPOTS);
+        setError(null);
+        return;
+      }
       const [air, fires, waste] = await Promise.all([
         ecoApi.getNearestStations(lat, lon),
         ecoApi.getIndiaFires(),
@@ -73,7 +87,7 @@ export function EcoMap({ lat, lon, className }: EcoMapProps) {
     } finally {
       setLoading(false);
     }
-  }, [lat, lon]);
+  }, [lat, lon, demoMode]);
 
   useEffect(() => {
     void (async () => {
@@ -109,7 +123,7 @@ export function EcoMap({ lat, lon, className }: EcoMapProps) {
             Interactive Map
           </div>
           <h2 className="mt-2 text-xl font-semibold text-white">
-            Live air, fire, and waste layers around your location
+            {demoMode ? "Sample layers (demo)" : "Live air, fire, and waste layers around your location"}
           </h2>
         </div>
 
@@ -188,8 +202,9 @@ export function EcoMap({ lat, lon, className }: EcoMapProps) {
             </div>
           ) : (
             <p className="mt-4 text-sm leading-6 text-slate-400">
-              The map auto-refreshes every minute and centers on Bengaluru by
-              default when geolocation is unavailable.
+              {demoMode
+                ? "Demo mode uses static sample points so judges can explore the UI without API keys."
+                : "The map auto-refreshes every minute and centers on Bengaluru by default when geolocation is unavailable."}
             </p>
           )}
         </aside>

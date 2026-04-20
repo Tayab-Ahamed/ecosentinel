@@ -16,6 +16,11 @@ import {
 
 import type { HistoricalPoint, TimeWindow, WeeklySummary } from "@/lib/api";
 import { ecoApi } from "@/lib/api";
+import {
+  buildDemoHistorical,
+  DEMO_SAFE_TIMES,
+  DEMO_WEEKLY,
+} from "@/lib/demo-data";
 import { formatLocalTime, getPm25Category, getPm25Color } from "@/lib/environment";
 
 interface AQIChartProps {
@@ -23,6 +28,8 @@ interface AQIChartProps {
   lon: number;
   title?: string;
   showWeekly?: boolean;
+  /** When true, show synthetic series (no OpenAQ / Prophet calls). */
+  demoMode?: boolean;
 }
 
 interface ChartPoint {
@@ -37,6 +44,7 @@ export function AQIChart({
   lon,
   title = "Air quality trend and forecast",
   showWeekly = false,
+  demoMode = false,
 }: AQIChartProps) {
   const [historical, setHistorical] = useState<HistoricalPoint[]>([]);
   const [safeTimes, setSafeTimes] = useState<TimeWindow[]>([]);
@@ -48,6 +56,38 @@ export function AQIChart({
   const fetchChartData = useCallback(async () => {
     setLoading(true);
     try {
+      if (demoMode) {
+        const history = buildDemoHistorical();
+        const merged = new Map<string, ChartPoint>();
+        for (const point of history) {
+          merged.set(point.timestamp, {
+            timestamp: point.timestamp,
+            label: formatLocalTime(point.timestamp),
+            historical: point.value,
+          });
+        }
+        const lastVal = history.at(-1)?.value ?? 90;
+        for (let i = 1; i <= 8; i++) {
+          const ts = new Date(Date.now() + i * 3600 * 1000).toISOString();
+          merged.set(ts, {
+            timestamp: ts,
+            label: formatLocalTime(ts),
+            historical: undefined,
+            forecast: Math.min(220, Math.max(35, lastVal * 0.94 + i * 1.8)),
+          });
+        }
+        const ordered = [...merged.values()].sort(
+          (left, right) =>
+            new Date(left.timestamp).getTime() - new Date(right.timestamp).getTime(),
+        );
+        setHistorical(history);
+        setSafeTimes(DEMO_SAFE_TIMES);
+        setWeeklySummary(DEMO_WEEKLY);
+        setChartPoints(ordered);
+        setError(null);
+        return;
+      }
+
       const nearest = await ecoApi.getNearestStations(lat, lon);
       const stationId = nearest.find((item) => item.station_id)?.station_id;
 
@@ -101,7 +141,7 @@ export function AQIChart({
     } finally {
       setLoading(false);
     }
-  }, [lat, lon]);
+  }, [lat, lon, demoMode]);
 
   useEffect(() => {
     void (async () => {
