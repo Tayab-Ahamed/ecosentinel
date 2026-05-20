@@ -1,4 +1,3 @@
 # Full production install (includes OpenAI Whisper → PyTorch). For CI or API-only, use requirements-base.txt.
 -r requirements-base.txt
 openai-whisper==20240930
-asyncpg==0.29.0
