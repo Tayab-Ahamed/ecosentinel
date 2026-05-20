@@ -2,6 +2,7 @@
 
 import base64
 import json
+import os
 from typing import Any
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
@@ -12,8 +13,24 @@ from services.voice_llm_agent import EcoSentinelVoiceAgent
 from services.whisper_client import WhisperClient
 
 router: APIRouter = APIRouter(tags=["voice-agent"])
-whisper_client: WhisperClient = WhisperClient()
-llm_agent: EcoSentinelVoiceAgent = EcoSentinelVoiceAgent()
+
+_skip_voice = os.getenv("ECOSENTINEL_SKIP_WHISPER_INIT", "").strip().lower() in ("1", "true", "yes")
+whisper_client: WhisperClient | None = None if _skip_voice else WhisperClient()
+llm_agent: EcoSentinelVoiceAgent | None = None if _skip_voice else EcoSentinelVoiceAgent()
+
+
+def _whisper() -> WhisperClient:
+    global whisper_client
+    if whisper_client is None:
+        whisper_client = WhisperClient()
+    return whisper_client
+
+
+def _llm() -> EcoSentinelVoiceAgent:
+    global llm_agent
+    if llm_agent is None:
+        llm_agent = EcoSentinelVoiceAgent()
+    return llm_agent
 
 
 class VoiceTextQueryRequest(BaseModel):
@@ -45,15 +62,15 @@ async def query_audio(
     """Transcribe audio, answer with LLM, and synthesize speech."""
     try:
         audio_bytes = await audio.read()
-        transcript = await whisper_client.transcribe_audio(audio_bytes=audio_bytes)
+        transcript = await _whisper().transcribe_audio(audio_bytes=audio_bytes)
         if not transcript:
             raise HTTPException(status_code=400, detail="Unable to transcribe audio input.")
 
-        response = await llm_agent.answer_environmental_query(
+        response = await _llm().answer_environmental_query(
             question=transcript,
             location={"lat": lat, "lon": lon, "city": city},
         )
-        tts_bytes = await whisper_client.text_to_speech(text=response.answer)
+        tts_bytes = await _whisper().text_to_speech(text=response.answer)
         encoded_audio = base64.b64encode(tts_bytes).decode("utf-8") if tts_bytes else ""
         return VoiceAudioQueryResponse(
             question=transcript,
@@ -72,7 +89,7 @@ async def query_audio(
 async def query_text(payload: VoiceTextQueryRequest) -> VoiceResponse:
     """Answer text query directly without transcription."""
     try:
-        return await llm_agent.answer_environmental_query(
+        return await _llm().answer_environmental_query(
             question=payload.question,
             location={"lat": payload.lat, "lon": payload.lon, "city": payload.city},
         )
@@ -100,12 +117,12 @@ async def websocket_voice_chat(websocket: WebSocket) -> None:
                 continue
 
             if text_payload == "__END_AUDIO__":
-                transcript = await whisper_client.transcribe_audio(audio_bytes=bytes(audio_buffer))
+                transcript = await _whisper().transcribe_audio(audio_bytes=bytes(audio_buffer))
                 audio_buffer.clear()
                 if not transcript:
                     await websocket.send_json({"type": "error", "message": "Could not transcribe audio chunk stream."})
                     continue
-                response = await llm_agent.answer_with_history(
+                response = await _llm().answer_with_history(
                     messages=history,
                     question=transcript,
                     location=session_location,
@@ -141,7 +158,7 @@ async def websocket_voice_chat(websocket: WebSocket) -> None:
             if not question:
                 continue
 
-            response = await llm_agent.answer_with_history(
+            response = await _llm().answer_with_history(
                 messages=history,
                 question=question,
                 location=session_location,

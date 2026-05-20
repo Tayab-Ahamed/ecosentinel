@@ -1,53 +1,50 @@
-# EcoSentinel Backend
+# EcoSentinel API
 
-Production-ready FastAPI backend for environmental monitoring.
+FastAPI backend for environmental monitoring, AI-assisted waste analysis, and air-quality forecasting.
 
-## Features
-- Real-time air quality (OpenAQ)
-- Fire hotspots (NASA FIRMS)
-- Waste classification (Gemini Vision)
-- Voice eco-assistant (Whisper + LLM)
-- Prophet forecasting
-- PostgreSQL persistence (historical data)
-- Alembic migrations
-- Docker Compose (PG + Redis)
+## Capabilities
 
-## Local Development
+- OpenAQ air-quality integration with station fallbacks
+- NASA FIRMS wildfire detection and proximity alerts
+- Gemini Vision waste classification
+- Whisper speech-to-text and LLM voice agent
+- Prophet PM2.5 forecasting
+- SQLModel persistence with Alembic migrations (PostgreSQL or SQLite)
 
-1. Clone & cd backend
-2. `pip install -r requirements.txt`
-3. Copy `.env.example` to `.env` & set API keys:
-   ```
-   OPENAQ_API_KEY=your_key
-   FIRMS_API_KEY=your_key
-   GEMINI_API_KEY=your_key
-   ```
-4. In root: `docker compose up db` (or local PG)
-5. `alembic upgrade head`
-6. `uvicorn main:app --reload`
+## Setup
 
-## Docker Full Stack
+```powershell
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements-base.txt   # or requirements.txt for Whisper
+Copy-Item .env.example .env
+alembic upgrade head
+uvicorn main:app --reload
 ```
-docker compose up --build
-```
-
-API at http://localhost:8000/docs
 
 ## Migrations
-```
-alembic revision --autogenerate -m "msg"
+
+```powershell
+alembic revision --autogenerate -m "description"
 alembic upgrade head
 ```
 
 ## Tests
-`pytest`
 
-## Deployment
-Railway: Deploy Dockerfile + railway.toml
-Vercel: Frontend only (proxy API)
+```powershell
+$env:ECOSENTINEL_SKIP_WHISPER_INIT = "1"
+pip install -r requirements-base.txt -r requirements-dev.txt
+pytest -v
+```
 
-## Env Vars
-- `DATABASE_URL`
-- `REDIS_URL`
-- `ECOSENTINEL_SKIP_WHISPER_INIT=1` (CI/prod)
+## Docker
 
+From the repository root:
+
+```powershell
+docker compose up --build
+```
+
+## Environment
+
+See `.env.example` for all variables. Minimum for live data: `GEMINI_API_KEY`, `FIRMS_API_KEY`.

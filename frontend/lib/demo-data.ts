@@ -1,6 +1,6 @@
 /**
- * Realistic sample data for demos when OpenAQ / FIRMS keys are not configured.
- * Toggle via demo mode in the app shell — not a substitute for production APIs.
+ * Sample data for demo mode when live API keys are not configured.
+ * Toggle via the sidebar in the app shell.
  */
 
 import type {

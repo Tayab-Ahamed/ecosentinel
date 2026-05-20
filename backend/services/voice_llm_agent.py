@@ -33,11 +33,15 @@ class EcoSentinelVoiceAgent:
         self.google_api_key = os.getenv("GEMINI_API_KEY", "")
         self._llm: ChatGoogleGenerativeAI | None = None
         if self.google_api_key and ChatGoogleGenerativeAI is not None:
-            self._llm = ChatGoogleGenerativeAI(
-                model=self.model_name,
-                google_api_key=self.google_api_key,
-                temperature=0.2,
-            )
+            try:
+                self._llm = ChatGoogleGenerativeAI(
+                    model=self.model_name,
+                    google_api_key=self.google_api_key,
+                    temperature=0.2,
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Gemini LLM unavailable: %s", exc)
+                self._llm = None
 
     @staticmethod
     def _needs_air_data(question: str) -> bool:

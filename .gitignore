@@ -41,6 +41,10 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 
+# Local databases
+*.db
+ecosentinel.db
+
 # Misc
 *.log
 *.pem

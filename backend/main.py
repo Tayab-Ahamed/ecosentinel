@@ -11,18 +11,20 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from backend.database import init_db, get_session
-from backend.routers.historical import router as historical_router
+from database import init_db
 from routers.air_quality import openaq_client, router as air_quality_router
 from routers.fire_data import firms_client, router as fire_data_router
-from routers.prediction import prophet_service, router as prediction_router
-from routers.voice_agent import whisper_client, router as voice_agent_router
+from routers.historical import router as historical_router
+from routers.prediction import router as prediction_router
+from routers import voice_agent as voice_agent_module
+from routers.voice_agent import router as voice_agent_router
 from routers.waste_vision import gemini_client, router as waste_vision_router
 from services.prophet_model import ProphetModelService
 
 load_dotenv()
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s — %(message)s")
 
 
 def _is_production() -> bool:
@@ -78,26 +80,35 @@ def _build_alerts(air_readings: list[dict[str, Any]], fires: list[dict[str, Any]
             )
     return alerts
 
+
 OPENAPI_TAGS: list[dict[str, str]] = [
     {
         "name": "air-quality",
-        "description": "Endpoints for real-time and latest city-level air quality insights.",
+        "description": "Real-time and historical city-level air quality insights.",
     },
     {
         "name": "fire-data",
-        "description": "Endpoints for active wildfire intelligence and regional fire activity.",
+        "description": "Active wildfire intelligence from NASA FIRMS satellite feed.",
     },
     {
         "name": "waste-vision",
-        "description": "Endpoints for AI-powered waste image classification and disposal guidance.",
+        "description": "AI-powered waste image classification and disposal guidance.",
     },
     {
         "name": "voice-agent",
-        "description": "Endpoints for voice-based eco assistant interactions and Q&A.",
+        "description": "Voice-based eco assistant powered by Whisper and Gemini.",
     },
     {
         "name": "prediction",
-        "description": "Endpoints for short-term environmental forecasting and trend prediction.",
+        "description": "Short-term PM2.5 forecasting via Facebook Prophet.",
+    },
+    {
+        "name": "historical",
+        "description": "Cached air-quality time series stored in PostgreSQL or SQLite.",
+    },
+    {
+        "name": "stats",
+        "description": "Aggregated dashboard stats endpoint for efficient frontend loading.",
     },
     {
         "name": "system",
@@ -111,8 +122,11 @@ OPENAPI_TAGS: list[dict[str, str]] = [
 
 app: FastAPI = FastAPI(
     title="EcoSentinel API",
-    description="Environmental intelligence APIs for air, fire, waste, voice, and forecasting.",
-    version="0.1.0",
+    description=(
+        "Environmental intelligence APIs for air quality, fire events, "
+        "waste classification, voice Q&A, and PM2.5 forecasting."
+    ),
+    version="1.0.0",
     openapi_tags=OPENAPI_TAGS,
 )
 
@@ -133,6 +147,73 @@ app.include_router(voice_agent_router, prefix="/api")
 app.include_router(prediction_router, prefix="/api")
 
 
+# ---------------------------------------------------------------------------
+# Dashboard stats – single call that replaces 4 parallel frontend requests
+# ---------------------------------------------------------------------------
+
+@app.get("/api/stats/dashboard", tags=["stats"])
+async def get_dashboard_stats(
+    lat: float = 12.9716,
+    lon: float = 77.5946,
+) -> dict[str, Any]:
+    """Return all dashboard overview data in one call to reduce frontend waterfall."""
+    try:
+        stations_task = openaq_client.get_nearest_stations(lat=lat, lon=lon)
+        fire_summary_task = firms_client.get_fire_summary()
+        hotspots_task = openaq_client.get_india_hotspots()
+        waste_hotspots_task = _get_waste_count()
+
+        stations, fire_summary, hotspots, waste_count = await asyncio.gather(
+            stations_task,
+            fire_summary_task,
+            hotspots_task,
+            waste_hotspots_task,
+            return_exceptions=True,
+        )
+
+        station_ids = []
+        if isinstance(stations, list):
+            station_ids = [int(s["id"]) for s in stations if "id" in s][:5]
+
+        air_readings = []
+        if station_ids:
+            try:
+                air_readings = await openaq_client.get_latest_readings(station_ids=station_ids)
+            except Exception:  # noqa: BLE001
+                pass
+
+        primary_pm25 = 0.0
+        primary_city = "Unknown"
+        if air_readings:
+            primary_pm25 = air_readings[0].value
+            primary_city = air_readings[0].location.city
+
+        return {
+            "pm25": primary_pm25,
+            "city": primary_city,
+            "fire_summary": fire_summary if isinstance(fire_summary, dict) else {},
+            "india_hotspots": hotspots[:8] if isinstance(hotspots, list) else [],
+            "waste_count": waste_count if isinstance(waste_count, int) else 0,
+            "air_readings": [r.model_dump(mode="json") for r in (air_readings or [])],
+            "generated_at": datetime.now(UTC).isoformat(),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Dashboard stats failed: {exc}") from exc
+
+
+async def _get_waste_count() -> int:
+    """Return waste hotspot count from the in-memory store."""
+    try:
+        from routers.waste_vision import _hotspots  # noqa: PLC0415
+        return len(_hotspots)
+    except Exception:  # noqa: BLE001
+        return 0
+
+
+# ---------------------------------------------------------------------------
+# Exception handlers
+# ---------------------------------------------------------------------------
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(_: Any, exc: HTTPException) -> JSONResponse:
     """Return consistent JSON error payload for HTTP exceptions."""
@@ -148,23 +229,28 @@ async def unhandled_exception_handler(_: Any, exc: Exception) -> JSONResponse:
     return JSONResponse(status_code=500, content={"detail": f"Internal server error: {exc}"})
 
 
+# ---------------------------------------------------------------------------
+# Lifecycle
+# ---------------------------------------------------------------------------
+
 @app.on_event("startup")
 async def startup_event() -> None:
-    """Initialize all service clients, DB, and expose startup readiness state."""
+    """Initialize database, service clients, and expose startup readiness state."""
     try:
-        # Re-load env and warm client config fields at startup.
         load_dotenv(override=False)
+        await init_db()
         openaq_client.api_key = os.getenv("OPENAQ_API_KEY", "")
         firms_client.api_key = os.getenv("FIRMS_API_KEY", "")
         gemini_client.api_key = os.getenv("GEMINI_API_KEY", "")
+
         skip_whisper = os.getenv("ECOSENTINEL_SKIP_WHISPER_INIT", "").strip().lower() in (
             "1",
             "true",
             "yes",
         )
-        whisper_ready = False if skip_whisper else await whisper_client.initialize_model()
-
-        await init_db()
+        whisper_ready = False
+        if not skip_whisper:
+            whisper_ready = await voice_agent_module._whisper().initialize_model()
 
         app.state.clients_ready = {
             "openaq": bool(openaq_client.api_key),
@@ -172,9 +258,13 @@ async def startup_event() -> None:
             "gemini": bool(gemini_client.api_key),
             "whisper": whisper_ready,
             "prophet": ProphetModelService.is_prophet_available(),
-            "database": True,
         }
         app.state.started_at = datetime.now(UTC).isoformat()
+
+        missing = [k for k, v in app.state.clients_ready.items() if not v and k != "whisper"]
+        if missing:
+            logger.warning("Missing API keys or optional deps: %s — some features will use fallbacks.", missing)
+
     except Exception as exc:
         logger.exception("Startup initialization failed")
         raise RuntimeError("Startup initialization failed") from exc
@@ -191,20 +281,25 @@ async def shutdown_event() -> None:
     )
 
 
-@app.get("/health", tags=["system"])
-async def health_check(session: AsyncSession = Depends(get_session)) -> dict[str, Any]:
-    """Return service health and client readiness status."""
-    try:
-        # Test DB connection
-        await session.exec("SELECT 1")
-        return {
-            "status": "ok",
-            "timestamp": datetime.now(UTC).isoformat(),
-            "clients_ready": getattr(app.state, "clients_ready", {}),
-        }
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Health check failed: {exc}") from exc
+# ---------------------------------------------------------------------------
+# Health check
+# ---------------------------------------------------------------------------
 
+@app.get("/health", tags=["system"])
+async def health_check() -> dict[str, Any]:
+    """Return service health and client readiness status."""
+    return {
+        "status": "ok",
+        "timestamp": datetime.now(UTC).isoformat(),
+        "started_at": getattr(app.state, "started_at", None),
+        "clients_ready": getattr(app.state, "clients_ready", {}),
+        "version": "1.0.0",
+    }
+
+
+# ---------------------------------------------------------------------------
+# WebSocket live feed
+# ---------------------------------------------------------------------------
 
 @app.websocket("/ws/live-feed")
 async def websocket_live_feed(websocket: WebSocket) -> None:
@@ -213,6 +308,9 @@ async def websocket_live_feed(websocket: WebSocket) -> None:
     feed_city: str = os.getenv("LIVE_FEED_CITY", "Bengaluru")
     feed_lat: float = float(os.getenv("LIVE_FEED_LAT", "12.9716"))
     feed_lon: float = float(os.getenv("LIVE_FEED_LON", "77.5946"))
+
+    # Send a keep-alive ping every 25 seconds to prevent Railway sleep
+    ping_interval = 25
 
     try:
         while True:
@@ -251,6 +349,9 @@ async def websocket_live_feed(websocket: WebSocket) -> None:
                 fires=fire_payload,
             ):
                 await websocket.send_json(alert)
+
+            # Keep-alive ping before sleeping
+            await websocket.send_json({"type": "ping", "timestamp": datetime.now(UTC).isoformat()})
             await asyncio.sleep(30)
     except WebSocketDisconnect:
         return

@@ -1,101 +1,73 @@
 # EcoSentinel
 
-EcoSentinel is an AI-powered environmental intelligence platform for the Nexora Hackathon 2026. It combines live air-quality data, NASA fire detections, AI waste classification, a voice assistant, and short-term PM2.5 forecasting in one full-stack experience.
+**AI-powered environmental intelligence platform** — real-time air quality, satellite wildfire tracking, computer-vision waste analysis, voice-driven insights, and short-term pollution forecasting in a single full-stack application.
 
-## What It Does
+[![CI](https://github.com/Tayab-Ahamed/ecosentinel/actions/workflows/ci.yml/badge.svg)](https://github.com/Tayab-Ahamed/ecosentinel/actions/workflows/ci.yml)
 
-- Tracks nearby air quality using OpenAQ and maps PM2.5 conditions around the user.
-- Visualizes active fires from NASA FIRMS as live map layers and summary alerts.
-- Classifies waste images with Gemini Vision and returns disposal guidance plus local air-quality context.
-- Answers environmental questions through a text and voice assistant backed by live backend data.
-- Forecasts near-term PM2.5 patterns and highlights safer outdoor time windows.
+## Highlights
+
+- **Unified dashboard** — PM2.5, fire activity, waste hotspots, and alerts in one responsive UI
+- **Live telemetry** — WebSocket feed for air quality, fires, and threshold-based alerts
+- **Multimodal AI** — Gemini Vision for waste classification; Whisper + LLM for voice Q&A
+- **Forecasting** — Facebook Prophet for 24-hour PM2.5 trends and safer outdoor windows
+- **Production-ready API** — FastAPI with OpenAPI docs, PostgreSQL/SQLite persistence, Docker, and Railway/Vercel deployment paths
 
 ## Architecture
 
 ```text
-                         +----------------------+
-                         |   Next.js Frontend   |
-                         |  Dashboard / Map /   |
-                         | Waste / Voice / AQI  |
-                         +----------+-----------+
-                                    |
-                           REST + WebSocket
-                                    |
-                         +----------v-----------+
-                         |    FastAPI Backend   |
-                         | Routers + Services   |
-                         +----+----+----+------+
-                              |    |    |
-                    +---------+    |    +------------------+
-                    |              |                       |
-             +------v------+ +-----v------+        +-------v--------+
-             |   OpenAQ    | | NASA FIRMS |        | Gemini / Voice |
-             | Air Quality | | Fire Data  |        | Vision / LLM   |
-             +-------------+ +------------+        +----------------+
-                              |
-                       +------v------+
-                       |   Prophet   |
-                       | Forecasting |
-                       +-------------+
+                    ┌─────────────────────────┐
+                    │   Next.js 16 Frontend │
+                    │  Dashboard · Map · AI │
+                    └───────────┬─────────────┘
+                                │ REST + WebSocket
+                    ┌───────────▼─────────────┐
+                    │     FastAPI Backend     │
+                    │  Routers · Services · DB│
+                    └──┬────┬────┬──────┬─────┘
+           ┌───────────┘    │    │      └──────────────┐
+           ▼                ▼    ▼                     ▼
+      ┌─────────┐     ┌──────────┐  ┌────────────┐  ┌─────────┐
+      │ OpenAQ  │     │NASA FIRMS│  │Gemini/Whisper│  │ Prophet │
+      └─────────┘     └──────────┘  └────────────┘  └─────────┘
+                                │
+                         ┌──────▼──────┐
+                         │ PostgreSQL  │
+                         │  or SQLite  │
+                         └─────────────┘
 ```
-
-## Open Source Foundations
-
-- `OpenAQ`
-  Used for real-world air-quality readings, nearest-station lookup, historical data, and India hotspot summaries.
-- `NASA FIRMS`
-  Used for active fire detections, proximity analysis, and fire-to-air-quality alerting.
-- `TrashNet-inspired waste workflow`
-  Extended into a multimodal waste analysis flow using Gemini Vision, hotspot reporting, and environmental impact guidance.
 
 ## Tech Stack
 
-| Layer | Tools |
+| Layer | Technologies |
 | --- | --- |
-| Frontend | Next.js 16, React 19, Tailwind CSS 4, Recharts, Leaflet, Framer Motion, Axios |
-| Backend | FastAPI, Pydantic v2, HTTPX, Prophet, OpenAI Whisper, gTTS |
-| AI | Gemini Vision, Gemini-powered voice reasoning |
-| Data | OpenAQ, NASA FIRMS |
-| Deployment | Railway for backend, Vercel for frontend |
+| **Frontend** | Next.js 16, React 19, TypeScript, Tailwind CSS 4, Leaflet, Recharts, Framer Motion |
+| **Backend** | FastAPI, Pydantic v2, SQLModel, Alembic, HTTPX, Prophet, OpenAI Whisper |
+| **AI / Data** | Google Gemini, OpenAQ, NASA FIRMS |
+| **Infrastructure** | Docker Compose, GitHub Actions, Railway, Vercel |
 
-## Repo Structure
+## Features
 
-```text
-ecosentinel/
-├── .github/workflows/ci.yml   # Frontend lint/build + backend tests
-├── backend/
-│   ├── main.py
-│   ├── routers/
-│   ├── services/
-│   ├── models/
-│   ├── tests/                 # Pytest smoke tests
-│   ├── requirements-base.txt  # API stack (no Whisper / PyTorch)
-│   ├── requirements.txt       # Full stack (+ Whisper for local STT)
-│   ├── requirements-dev.txt   # Pytest
-│   ├── Dockerfile
-│   └── .env.example
-├── frontend/
-│   ├── app/
-│   ├── components/
-│   ├── lib/
-│   └── .env.example
-├── scripts/
-│   ├── verify.ps1             # Windows: same checks as CI
-│   └── verify.sh              # Linux/macOS
-├── railway.toml
-└── LICENSE
-```
+| Module | Description |
+| --- | --- |
+| **Air Quality** | Nearest-station lookup, India hotspot rankings, historical charts, India AQI categories |
+| **Fire Intelligence** | NASA FIRMS active fires, proximity search, impact summaries |
+| **Waste Scanner** | Image upload → Gemini classification with disposal guidance |
+| **Voice Assistant** | Speech-to-text and natural-language answers grounded in live API data |
+| **Predictions** | PM2.5 forecast, safe outdoor windows, weekly summaries |
+| **Carbon Calculator** | Client-side footprint estimator (transport, diet, energy) |
+| **Historical Cache** | Persist and query OpenAQ time series via `/api/historical/*` |
 
-## Prerequisites
+## Quick Start
 
-- **Python 3.11+** (3.11 matches `backend/Dockerfile`; avoid mixing older patch tooling on Windows without a C compiler).
-- **Node.js 20+** and npm (for the frontend).
+### Prerequisites
 
-## Local Setup
+- Python 3.11+
+- Node.js 20+
+- (Optional) Docker for PostgreSQL
 
-### 1. Backend
+### Backend
 
-**Option A — full features (includes Whisper speech-to-text; installs PyTorch):**
+**Full install (includes Whisper for local speech-to-text):**
 
 ```powershell
 cd backend
@@ -103,25 +75,22 @@ python -m venv .venv
 .\.venv\Scripts\activate
 pip install -r requirements.txt
 Copy-Item .env.example .env
-# Edit .env with your API keys
+# Add GEMINI_API_KEY, FIRMS_API_KEY, optional OPENAQ_API_KEY
+alembic upgrade head
 uvicorn main:app --reload
 ```
 
-**Option B — API and tests without local Whisper (faster, smaller footprint; same as CI):**
+**Lightweight install (API + tests, no PyTorch):**
 
 ```powershell
-cd backend
-python -m venv .venv
-.\.venv\Scripts\activate
 pip install -r requirements-base.txt
-Copy-Item .env.example .env
 $env:ECOSENTINEL_SKIP_WHISPER_INIT = "1"
 uvicorn main:app --reload
 ```
 
-Backend docs: `http://localhost:8000/docs`
+API documentation: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-### 2. Frontend
+### Frontend
 
 ```powershell
 cd frontend
@@ -130,113 +99,91 @@ npm install
 npm run dev
 ```
 
-Frontend app: `http://localhost:3000`
+Application: [http://localhost:3000](http://localhost:3000)
+
+Toggle **Demo mode** in the sidebar to explore the UI with sample data when API keys are not configured.
+
+### Docker (PostgreSQL + API)
+
+```powershell
+docker compose up --build
+```
 
 ## Environment Variables
 
-### Backend
+### Backend (`backend/.env`)
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | Yes (waste/voice) | Gemini Vision and LLM |
+| `FIRMS_API_KEY` | Yes (fires) | NASA FIRMS fire feed |
+| `OPENAQ_API_KEY` | No | Authenticated OpenAQ access |
+| `DATABASE_URL` | No | Defaults to SQLite; use PostgreSQL in production |
+| `FRONTEND_URL` | Prod | Extra CORS origin |
+| `ECOSENTINEL_BACKEND_URL` | Prod | Public API URL for the voice agent |
+| `ECOSENTINEL_ENV` | Prod | Set to `production` to hide internal errors |
+| `ECOSENTINEL_SKIP_WHISPER_INIT` | No | `1` skips Whisper model load |
+
+### Frontend (`frontend/.env.local`)
 
 | Variable | Purpose |
 | --- | --- |
-| `GEMINI_API_KEY` | Gemini Vision and LLM responses |
-| `OPENAQ_API_KEY` | Optional OpenAQ authenticated access |
-| `FIRMS_API_KEY` | NASA FIRMS fire feed (**required** for non-empty fire data) |
-| `OPENWEATHER_API_KEY` | Reserved for future weather context |
-| `ECOSENTINEL_BACKEND_URL` | Backend base URL used by the voice agent (use your **public** URL in production) |
-| `FRONTEND_URL` | Deployed frontend origin for CORS (in addition to built-in defaults) |
-| `ECOSENTINEL_ENV` | Set to `production` on Railway/Docker to hide raw exception text from clients |
-| `ECOSENTINEL_SKIP_WHISPER_INIT` | Set to `1` to skip loading Whisper at startup (tests / CI / faster dev without STT) |
-| `LIVE_FEED_CITY` | Default websocket city label |
-| `LIVE_FEED_LAT` / `LIVE_FEED_LON` | Default websocket coordinates |
+| `NEXT_PUBLIC_API_URL` | FastAPI base URL (e.g. `http://localhost:8000`) |
 
-### Frontend
+## API Overview
 
-| Variable | Purpose |
+| Group | Endpoints |
 | --- | --- |
-| `NEXT_PUBLIC_API_URL` | Base URL of the FastAPI backend (local or deployed) |
+| **Air** | `/api/air/nearest`, `/api/air/city/{city}`, `/api/air/india-hotspots`, `/api/air/historical/{station_id}` |
+| **Fires** | `/api/fires/india`, `/api/fires/near`, `/api/fires/summary` |
+| **Waste** | `/api/waste/classify-image`, `/api/waste/hotspots` |
+| **Voice** | `/api/voice/query-text`, `/api/voice/query-audio`, `WS /api/ws/voice-chat` |
+| **Predictions** | `/api/predict/air-quality`, `/api/predict/safe-outdoor-times` |
+| **Historical** | `/api/historical/readings`, `/api/historical/cache`, `/api/historical/sync` |
+| **Stats** | `/api/stats/dashboard` |
+| **System** | `/health`, `WS /ws/live-feed` |
 
-## Verification and CI
+## Development
 
-- **GitHub Actions** runs on push/PR: backend `compileall` + `pytest`, frontend `npm run lint` + `npm run build`.
-- **Badge (optional):** After the repo is on GitHub, add a status badge with  
-  `https://github.com/<you>/<repo>/actions/workflows/ci.yml/badge.svg`.
-- **Local (same as CI):**
+### Verify locally (matches CI checks)
 
 ```powershell
 .\scripts\verify.ps1
 ```
 
 ```bash
-chmod +x scripts/verify.sh && ./scripts/verify.sh
+./scripts/verify.sh
 ```
 
-## Hackathon Submission Checklist
+### Run tests
 
-- [ ] **Repository:** Root `.gitignore` excludes `.env` and secrets; only `.env.example` files are tracked.
-- [ ] **Keys:** `GEMINI_API_KEY`, `FIRMS_API_KEY`, and optional `OPENAQ_API_KEY` set in Railway and/or local `.env`.
-- [ ] **Deployed URLs:** Vercel `NEXT_PUBLIC_API_URL` points to your Railway (or other) backend **HTTPS** URL.
-- [ ] **CORS:** Railway `FRONTEND_URL` set to your Vercel URL; `ECOSENTINEL_ENV=production` recommended on the backend.
-- [ ] **Voice agent:** `ECOSENTINEL_BACKEND_URL` on the server is the **public** API URL (not `localhost`).
-- [ ] **Demo:** Record a short walkthrough (dashboard, map, waste, voice or text, forecast) and link it in your submission if required.
-- [ ] **CI badge (optional):** Add the workflow badge to this README once the repo is public on GitHub.
-
-## API Summary
-
-### Air
-
-- `GET /api/air/nearest`
-- `GET /api/air/city/{city_name}`
-- `GET /api/air/india-hotspots`
-- `GET /api/air/historical/{station_id}`
-- `GET /api/air/aqi-category`
-
-### Fires
-
-- `GET /api/fires/india`
-- `GET /api/fires/near`
-- `GET /api/fires/summary`
-- `GET /api/fires/impact-on-air`
-
-### Waste
-
-- `POST /api/waste/classify-image`
-- `POST /api/waste/classify-url`
-- `GET /api/waste/impact-stats`
-- `POST /api/waste/report-hotspot`
-- `GET /api/waste/hotspots`
-
-### Voice
-
-- `POST /api/voice/query-audio`
-- `POST /api/voice/query-text`
-- `WS /api/ws/voice-chat`
-
-### Predictions
-
-- `GET /api/predict/air-quality`
-- `GET /api/predict/safe-outdoor-times`
-- `GET /api/predict/weekly-summary`
-
-### System
-
-- `GET /health`
-- `WS /ws/live-feed`
+```powershell
+cd backend
+$env:ECOSENTINEL_SKIP_WHISPER_INIT = "1"
+pip install -r requirements-base.txt -r requirements-dev.txt
+pytest -v
+```
 
 ## Deployment
 
-### Railway Backend
+| Service | Target | Notes |
+| --- | --- | --- |
+| **API** | Railway | `backend/Dockerfile`, health check `/health`, run migrations on start |
+| **UI** | Vercel | Deploy `frontend/`; set `NEXT_PUBLIC_API_URL` to your API URL |
 
-- `backend/Dockerfile` installs the **full** stack (including Whisper). Set **`ECOSENTINEL_ENV=production`** in the Railway dashboard (the image sets it by default).
-- `railway.toml` points at the Dockerfile; health check uses `/health`.
-- Set `FRONTEND_URL`, `GEMINI_API_KEY`, `FIRMS_API_KEY`, `ECOSENTINEL_BACKEND_URL`, and other vars from the table above.
+Set `ECOSENTINEL_ENV=production`, `FRONTEND_URL`, and `ECOSENTINEL_BACKEND_URL` on the backend. Point the frontend at the deployed HTTPS API.
 
-### Vercel Frontend
+## Project Structure
 
-- Set `NEXT_PUBLIC_API_URL` to your Railway backend URL.
-- Deploy the `frontend` directory as the Vercel project root.
+```text
+ecosentinel/
+├── backend/          # FastAPI application, services, Alembic migrations
+├── frontend/         # Next.js dashboard and components
+├── scripts/          # Local verification scripts
+├── docker-compose.yml
+└── .github/workflows/ci.yml
+```
 
-## Notes
+## License
 
-- The frontend is inspired by the provided `v0.dev` export, but wired into the actual backend endpoints and trimmed to the dependencies already present in this repo.
-- **Redis** was removed as an unused dependency; add it back only if you implement caching or queues.
-- Full voice and forecasting features require the full Python dependency set; use `requirements-base.txt` when you do not need local Whisper (CI and quick API work).
+See [LICENSE](LICENSE).

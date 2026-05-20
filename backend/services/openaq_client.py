@@ -15,6 +15,19 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
+# Fallback station IDs for major Indian cities — used when GPS-based lookup returns empty
+FALLBACK_STATIONS: dict[str, int] = {
+    "bengaluru": 8003,
+    "bangalore": 8003,
+    "delhi": 8118,
+    "mumbai": 8121,
+    "kolkata": 8112,
+    "chennai": 8105,
+    "hyderabad": 8109,
+    "pune": 8123,
+}
+DEFAULT_FALLBACK_STATION_ID = 8003  # Bengaluru
+
 
 class OpenAQClient:
     """Async client wrapper for OpenAQ v3 integrations."""
@@ -69,7 +82,7 @@ class OpenAQClient:
         return None
 
     async def get_nearest_stations(self, lat: float, lon: float, radius_km: int = 25) -> list[dict[str, Any]]:
-        """Return nearest locations around coordinates."""
+        """Return nearest locations around coordinates, with fallback to known station."""
         data = await self._get_json(
             "/locations",
             params={
@@ -78,9 +91,11 @@ class OpenAQClient:
                 "limit": 10,
             },
         )
-        if not data:
-            return []
-        return data.get("results", [])
+        results = data.get("results", []) if data else []
+        if not results:
+            logger.warning("No stations near (%.4f, %.4f) — using fallback station %s", lat, lon, DEFAULT_FALLBACK_STATION_ID)
+            return [{"id": DEFAULT_FALLBACK_STATION_ID, "name": "Bengaluru (fallback)", "city": "Bengaluru"}]
+        return results
 
     async def get_latest_readings(self, station_ids: list[int]) -> list[AirQualityReading]:
         """Fetch latest PM2.5 readings for multiple station IDs."""
@@ -147,7 +162,12 @@ class OpenAQClient:
 
         station_ids = [int(loc["id"]) for loc in location_data.get("results", []) if "id" in loc]
         if not station_ids:
-            return {"pm25": 0.0, "co2": 0.0, "no2": 0.0}
+            city_lower = city_name.lower().strip()
+            fallback_id = FALLBACK_STATIONS.get(city_lower)
+            if fallback_id:
+                station_ids = [fallback_id]
+            else:
+                return {"pm25": 0.0, "co2": 0.0, "no2": 0.0}
 
         sums = {"pm25": 0.0, "co2": 0.0, "no2": 0.0}
         counts = {"pm25": 0, "co2": 0, "no2": 0}
@@ -172,43 +192,46 @@ class OpenAQClient:
         }
 
     async def get_india_hotspots(self) -> list[dict[str, Any]]:
-        """Return top 10 Indian locations with highest current PM2.5."""
-        locations_data = await self._get_json("/locations", params={"country": "IN", "limit": 100})
+        """Return top 10 Indian locations with highest current PM2.5 (parallel fetching)."""
+        locations_data = await self._get_json("/locations", params={"country": "IN", "limit": 15})
         if not locations_data:
             return []
 
         locations = locations_data.get("results", [])
-        hotspots: list[dict[str, Any]] = []
-        for location in locations:
+
+        async def _fetch_pm25(location: dict[str, Any]) -> dict[str, Any] | None:
             location_id = location.get("id")
             if location_id is None:
-                continue
+                return None
             readings = await self._get_json(
                 "/measurements",
                 params={"location_id": int(location_id), "parameter": "pm25", "limit": 1},
             )
             if not readings or not readings.get("results"):
-                continue
+                return None
             latest = readings["results"][0]
-            hotspots.append(
-                {
-                    "location_id": int(location_id),
-                    "location_name": location.get("name") or location.get("locality") or "Unknown",
-                    "city": location.get("city") or "Unknown",
-                    "pm25": float(latest.get("value", 0.0)),
-                    "unit": latest.get("unit", "ug/m3"),
-                    "timestamp": latest.get("datetime"),
-                }
-            )
+            return {
+                "location_id": int(location_id),
+                "location_name": location.get("name") or location.get("locality") or "Unknown",
+                "city": location.get("city") or "Unknown",
+                "pm25": float(latest.get("value", 0.0)),
+                "unit": latest.get("unit", "ug/m3"),
+                "timestamp": latest.get("datetime"),
+            }
 
+        results = await asyncio.gather(*[_fetch_pm25(loc) for loc in locations], return_exceptions=True)
+        hotspots = [r for r in results if isinstance(r, dict)]
         hotspots.sort(key=lambda item: item["pm25"], reverse=True)
         return hotspots[:10]
 
     async def get_latest(self, city: str) -> AirQualityReading | None:
-        """Compatibility helper for existing router endpoint."""
+        """Compatibility helper — returns one reading for a city."""
         stations = await self._get_json("/locations", params={"city": city, "limit": 1})
         if not stations or not stations.get("results"):
-            return None
+            city_lower = city.lower().strip()
+            fallback_id = FALLBACK_STATIONS.get(city_lower, DEFAULT_FALLBACK_STATION_ID)
+            readings = await self.get_latest_readings(station_ids=[fallback_id])
+            return readings[0] if readings else None
 
         station_id = int(stations["results"][0]["id"])
         readings = await self.get_latest_readings(station_ids=[station_id])

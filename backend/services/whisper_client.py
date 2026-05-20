@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import os
 import tempfile
 from io import BytesIO
 from pathlib import Path
@@ -30,7 +31,8 @@ class WhisperClient:
     def __init__(self) -> None:
         self.model_name = "base"
         self._model: Any | None = None
-        self.voice_agent = EcoSentinelVoiceAgent()
+        skip = os.getenv("ECOSENTINEL_SKIP_WHISPER_INIT", "").strip().lower() in ("1", "true", "yes")
+        self.voice_agent: EcoSentinelVoiceAgent | None = None if skip else EcoSentinelVoiceAgent()
 
     async def initialize_model(self) -> bool:
         """Load Whisper model once and keep in memory."""
@@ -102,6 +104,8 @@ class WhisperClient:
         transcript = await self.transcribe_audio(audio_bytes=audio_bytes)
         if not transcript:
             return "", "I could not transcribe your audio. Please try again with a clearer recording."
+        if self.voice_agent is None:
+            self.voice_agent = EcoSentinelVoiceAgent()
         response = await self.voice_agent.answer_environmental_query(
             question=transcript,
             location={"lat": 12.9716, "lon": 77.5946, "city": "Bengaluru"},

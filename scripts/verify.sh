@@ -3,12 +3,14 @@ set -euo pipefail
 echo "== EcoSentinel verify =="
 
 echo ""
-echo "[backend] pytest + compileall"
+echo "[backend] ruff + pytest"
 cd "$(dirname "$0")/../backend"
 export ECOSENTINEL_SKIP_WHISPER_INIT=1
-python -m pip install -q -r requirements-base.txt -r requirements-dev.txt
-python -m compileall -q .
-python -m pytest -q
+export DATABASE_URL="sqlite+aiosqlite:///./verify_ecosentinel.db"
+python -m pip install -q ruff -r requirements-base.txt -r requirements-dev.txt
+ruff check .
+ruff format . --check
+python -m pytest -v
 
 echo ""
 echo "[frontend] lint + build"
