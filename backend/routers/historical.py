@@ -145,4 +145,9 @@ async def sync_from_openaq(
         synced += 1
 
     await session.commit()
-    return {"synced": synced, "station_id": station_id, "city": city_key, "parameter": parameter.lower()}
+    return {
+        "synced": synced,
+        "station_id": station_id,
+        "city": city_key,
+        "parameter": parameter.lower(),
+    }

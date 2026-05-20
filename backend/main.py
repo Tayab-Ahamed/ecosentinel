@@ -47,7 +47,9 @@ def _allowed_origins() -> list[str]:
     return sorted(set(origins))
 
 
-def _build_alerts(air_readings: list[dict[str, Any]], fires: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _build_alerts(
+    air_readings: list[dict[str, Any]], fires: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     """Create lightweight alert payloads for the realtime WebSocket feed."""
     alerts: list[dict[str, Any]] = []
     for reading in air_readings:
@@ -151,6 +153,7 @@ app.include_router(prediction_router, prefix="/api")
 # Dashboard stats – single call that replaces 4 parallel frontend requests
 # ---------------------------------------------------------------------------
 
+
 @app.get("/api/stats/dashboard", tags=["stats"])
 async def get_dashboard_stats(
     lat: float = 12.9716,
@@ -205,6 +208,7 @@ async def _get_waste_count() -> int:
     """Return waste hotspot count from the in-memory store."""
     try:
         from routers.waste_vision import _hotspots  # noqa: PLC0415
+
         return len(_hotspots)
     except Exception:  # noqa: BLE001
         return 0
@@ -213,6 +217,7 @@ async def _get_waste_count() -> int:
 # ---------------------------------------------------------------------------
 # Exception handlers
 # ---------------------------------------------------------------------------
+
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(_: Any, exc: HTTPException) -> JSONResponse:
@@ -232,6 +237,7 @@ async def unhandled_exception_handler(_: Any, exc: Exception) -> JSONResponse:
 # ---------------------------------------------------------------------------
 # Lifecycle
 # ---------------------------------------------------------------------------
+
 
 @app.on_event("startup")
 async def startup_event() -> None:
@@ -263,7 +269,9 @@ async def startup_event() -> None:
 
         missing = [k for k, v in app.state.clients_ready.items() if not v and k != "whisper"]
         if missing:
-            logger.warning("Missing API keys or optional deps: %s — some features will use fallbacks.", missing)
+            logger.warning(
+                "Missing API keys or optional deps: %s — some features will use fallbacks.", missing
+            )
 
     except Exception as exc:
         logger.exception("Startup initialization failed")
@@ -285,6 +293,7 @@ async def shutdown_event() -> None:
 # Health check
 # ---------------------------------------------------------------------------
 
+
 @app.get("/health", tags=["system"])
 async def health_check() -> dict[str, Any]:
     """Return service health and client readiness status."""
@@ -301,6 +310,7 @@ async def health_check() -> dict[str, Any]:
 # WebSocket live feed
 # ---------------------------------------------------------------------------
 
+
 @app.websocket("/ws/live-feed")
 async def websocket_live_feed(websocket: WebSocket) -> None:
     """Stream air quality, fire, and alert updates every 30 seconds."""
@@ -316,14 +326,23 @@ async def websocket_live_feed(websocket: WebSocket) -> None:
         while True:
             stations = await openaq_client.get_nearest_stations(lat=feed_lat, lon=feed_lon)
             station_ids = [int(station["id"]) for station in stations if "id" in station][:5]
-            air_quality = await openaq_client.get_latest_readings(station_ids=station_ids) if station_ids else []
-            nearby_fires = await firms_client.get_fires_near(lat=feed_lat, lon=feed_lon, radius_km=250, days=1)
+            air_quality = (
+                await openaq_client.get_latest_readings(station_ids=station_ids)
+                if station_ids
+                else []
+            )
+            nearby_fires = await firms_client.get_fires_near(
+                lat=feed_lat, lon=feed_lon, radius_km=250, days=1
+            )
 
             fire_payload = [
                 {
                     **fire.model_dump(),
                     "distance_km": round(
-                        firms_client._distance_km(feed_lat, feed_lon, fire.latitude, fire.longitude), 2
+                        firms_client._distance_km(
+                            feed_lat, feed_lon, fire.latitude, fire.longitude
+                        ),
+                        2,
                     ),
                 }
                 for fire in nearby_fires

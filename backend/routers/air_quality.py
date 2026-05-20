@@ -51,7 +51,9 @@ async def get_nearest_air_quality(
             return []
         return await client.get_latest_readings(station_ids=station_ids)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch nearest readings: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch nearest readings: {exc}"
+        ) from exc
 
 
 @router.get("/city/{city_name}", response_model=CityAverageResponse)
@@ -73,7 +75,9 @@ async def get_city_air_summary(
             aqi_category=aqi_category,
         )
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch city averages: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch city averages: {exc}"
+        ) from exc
 
 
 @router.get("/india-hotspots", response_model=list[IndiaHotspot])
@@ -85,7 +89,9 @@ async def get_india_hotspots(
         hotspots = await client.get_india_hotspots()
         return [IndiaHotspot(**item) for item in hotspots]
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch India hotspots: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch India hotspots: {exc}"
+        ) from exc
 
 
 @router.get("/historical/{station_id}", response_model=list[HistoricalReading])
@@ -97,7 +103,9 @@ async def get_historical_air_data(
 ) -> list[HistoricalReading]:
     """Return historical measurements for chart rendering."""
     try:
-        raw = await client.get_historical_data(station_id=station_id, parameter=parameter, days=days)
+        raw = await client.get_historical_data(
+            station_id=station_id, parameter=parameter, days=days
+        )
         points: list[HistoricalReading] = []
         for item in raw:
             dt = item.get("datetime") or item.get("date") or {}
@@ -112,7 +120,9 @@ async def get_historical_air_data(
             )
         return points
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch historical data: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch historical data: {exc}"
+        ) from exc
 
 
 @router.get("/aqi-category", response_model=AQICategoryResponse)

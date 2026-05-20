@@ -24,8 +24,12 @@ def upgrade() -> None:
         sa.Column("source", sa.String(), nullable=False, server_default="openaq"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_historicaldata_location_city"), "historicaldata", ["location_city"], unique=False)
-    op.create_index(op.f("ix_historicaldata_timestamp"), "historicaldata", ["timestamp"], unique=False)
+    op.create_index(
+        op.f("ix_historicaldata_location_city"), "historicaldata", ["location_city"], unique=False
+    )
+    op.create_index(
+        op.f("ix_historicaldata_timestamp"), "historicaldata", ["timestamp"], unique=False
+    )
 
     op.create_table(
         "user",
@@ -45,4 +49,3 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_historicaldata_timestamp"), table_name="historicaldata")
     op.drop_index(op.f("ix_historicaldata_location_city"), table_name="historicaldata")
     op.drop_table("historicaldata")
-

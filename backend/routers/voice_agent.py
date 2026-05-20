@@ -120,7 +120,9 @@ async def websocket_voice_chat(websocket: WebSocket) -> None:
                 transcript = await _whisper().transcribe_audio(audio_bytes=bytes(audio_buffer))
                 audio_buffer.clear()
                 if not transcript:
-                    await websocket.send_json({"type": "error", "message": "Could not transcribe audio chunk stream."})
+                    await websocket.send_json(
+                        {"type": "error", "message": "Could not transcribe audio chunk stream."}
+                    )
                     continue
                 response = await _llm().answer_with_history(
                     messages=history,

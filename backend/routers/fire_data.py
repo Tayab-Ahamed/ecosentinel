@@ -115,7 +115,9 @@ async def get_fire_impact_on_air(
         sampled_fires = sorted(high_conf_fires, key=lambda item: item.frp, reverse=True)[:25]
         station_ids: set[int] = set()
         for fire in sampled_fires:
-            stations = await openaq.get_nearest_stations(lat=fire.latitude, lon=fire.longitude, radius_km=100)
+            stations = await openaq.get_nearest_stations(
+                lat=fire.latitude, lon=fire.longitude, radius_km=100
+            )
             for station in stations:
                 station_id = station.get("id")
                 if station_id is not None:
@@ -124,7 +126,13 @@ async def get_fire_impact_on_air(
         if not station_ids:
             return []
 
-        air_readings: list[AirQualityReading] = await openaq.get_latest_readings(station_ids=list(station_ids))
-        return firms.correlate_fire_to_air_quality(fire_events=high_conf_fires, air_readings=air_readings)
+        air_readings: list[AirQualityReading] = await openaq.get_latest_readings(
+            station_ids=list(station_ids)
+        )
+        return firms.correlate_fire_to_air_quality(
+            fire_events=high_conf_fires, air_readings=air_readings
+        )
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to correlate fire impact on air: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to correlate fire impact on air: {exc}"
+        ) from exc

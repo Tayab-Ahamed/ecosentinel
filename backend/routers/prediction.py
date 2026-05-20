@@ -166,7 +166,9 @@ async def get_weekly_summary(
             elif risk == "Avoid outdoor activity":
                 recommendation = "Use a mask outdoors and avoid intense exercise."
             else:
-                recommendation = "Stay indoors, keep windows closed, and use air filtration if possible."
+                recommendation = (
+                    "Stay indoors, keep windows closed, and use air filtration if possible."
+                )
             summary.append(
                 WeeklyForecastSummary(
                     date=day_key,

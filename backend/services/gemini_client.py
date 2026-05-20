@@ -38,7 +38,9 @@ class GeminiClient:
         self.openaq_client = OpenAQClient()
         if self.api_key and genai is not None:
             genai.configure(api_key=self.api_key)
-        self._model = genai.GenerativeModel(self.model_name) if self.api_key and genai is not None else None
+        self._model = (
+            genai.GenerativeModel(self.model_name) if self.api_key and genai is not None else None
+        )
 
     @staticmethod
     def _fallback_classification() -> WasteClassification:
@@ -79,7 +81,9 @@ class GeminiClient:
             return "Very Unhealthy"
         return "Hazardous"
 
-    async def _build_local_air_quality_correlation(self, waste_type: str, location: dict[str, Any]) -> str:
+    async def _build_local_air_quality_correlation(
+        self, waste_type: str, location: dict[str, Any]
+    ) -> str:
         """Compose local PM2.5-aware advisory text."""
         try:
             lat = float(location.get("lat"))
@@ -104,7 +108,9 @@ class GeminiClient:
             f"Burning or improper disposal of {waste_type} significantly worsens this."
         )
 
-    async def _classify_with_gemini(self, image_bytes: bytes, location: dict[str, Any]) -> WasteClassification:
+    async def _classify_with_gemini(
+        self, image_bytes: bytes, location: dict[str, Any]
+    ) -> WasteClassification:
         """Run Gemini Vision prompt and parse strict JSON output."""
         if not self._model:
             return self._fallback_classification()
@@ -129,7 +135,9 @@ class GeminiClient:
         )
         payload = self._extract_json(response.text or "")
 
-        waste_type_value = str(payload.get("waste_type", "unknown")).strip().lower().replace("-", "")
+        waste_type_value = (
+            str(payload.get("waste_type", "unknown")).strip().lower().replace("-", "")
+        )
         if waste_type_value == "e_waste":
             waste_type_value = "ewaste"
         if waste_type_value not in {item.value for item in WasteType if item != WasteType.UNKNOWN}:
@@ -147,7 +155,9 @@ class GeminiClient:
             disposal_recommendation=str(payload.get("disposal_recommendation", "")).strip(),
         )
 
-    async def classify_waste(self, image_bytes: bytes, location: dict[str, Any]) -> WasteClassification:
+    async def classify_waste(
+        self, image_bytes: bytes, location: dict[str, Any]
+    ) -> WasteClassification:
         """Classify waste image with Gemini and enrich with local air-quality correlation."""
         try:
             return await self._classify_with_gemini(image_bytes=image_bytes, location=location)
@@ -155,7 +165,9 @@ class GeminiClient:
             logger.error("Gemini classify_waste failed: %s", exc)
             return self._fallback_classification()
 
-    async def analyze_waste_from_url(self, image_url: str, location: dict[str, Any]) -> WasteClassification:
+    async def analyze_waste_from_url(
+        self, image_url: str, location: dict[str, Any]
+    ) -> WasteClassification:
         """Download an image URL and classify it with Gemini Vision."""
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(20.0)) as client:

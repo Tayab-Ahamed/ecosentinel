@@ -56,7 +56,10 @@ def _validate_uploaded_image(image: UploadFile, image_bytes: bytes) -> None:
     if not any(filename.endswith(ext) for ext in ALLOWED_EXTENSIONS):
         raise HTTPException(status_code=400, detail="Invalid file extension. Use jpg/png/webp.")
     if image.content_type not in ALLOWED_MIME_TYPES:
-        raise HTTPException(status_code=400, detail="Invalid content type. Use image/jpeg, image/png, or image/webp.")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid content type. Use image/jpeg, image/png, or image/webp.",
+        )
     if len(image_bytes) > MAX_IMAGE_SIZE_BYTES:
         raise HTTPException(status_code=413, detail="Image exceeds 10MB size limit.")
 
@@ -70,13 +73,17 @@ async def classify_waste_image(
     """Classify uploaded waste image from multipart form-data."""
     image_bytes: bytes = await image.read()
     _validate_uploaded_image(image=image, image_bytes=image_bytes)
-    return await gemini_client.classify_waste(image_bytes=image_bytes, location={"lat": lat, "lon": lon})
+    return await gemini_client.classify_waste(
+        image_bytes=image_bytes, location={"lat": lat, "lon": lon}
+    )
 
 
 @router.post("/classify-url", response_model=WasteClassification)
 async def classify_waste_url(payload: WasteUrlRequest) -> WasteClassification:
     """Classify waste from image URL."""
-    return await gemini_client.analyze_waste_from_url(image_url=str(payload.image_url), location={"lat": payload.lat, "lon": payload.lon})
+    return await gemini_client.analyze_waste_from_url(
+        image_url=str(payload.image_url), location={"lat": payload.lat, "lon": payload.lon}
+    )
 
 
 @router.get("/impact-stats", response_model=dict[str, dict[str, str | int]])

@@ -1,7 +1,5 @@
 """Alembic migration environment (sync driver for upgrade scripts)."""
 
-from logging.config import fileConfig
-
 from alembic import context
 from sqlalchemy import create_engine, pool
 
@@ -9,10 +7,6 @@ from database import DATABASE_URL
 from models.db import SQLModel  # noqa: F401 — register models on metadata
 
 config = context.config
-
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
-
 target_metadata = SQLModel.metadata
 
 

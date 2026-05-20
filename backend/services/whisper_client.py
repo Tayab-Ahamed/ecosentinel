@@ -31,7 +31,11 @@ class WhisperClient:
     def __init__(self) -> None:
         self.model_name = "base"
         self._model: Any | None = None
-        skip = os.getenv("ECOSENTINEL_SKIP_WHISPER_INIT", "").strip().lower() in ("1", "true", "yes")
+        skip = os.getenv("ECOSENTINEL_SKIP_WHISPER_INIT", "").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+        )
         self.voice_agent: EcoSentinelVoiceAgent | None = None if skip else EcoSentinelVoiceAgent()
 
     async def initialize_model(self) -> bool:
@@ -103,7 +107,10 @@ class WhisperClient:
         """Backwards-compatible helper for existing voice route."""
         transcript = await self.transcribe_audio(audio_bytes=audio_bytes)
         if not transcript:
-            return "", "I could not transcribe your audio. Please try again with a clearer recording."
+            return (
+                "",
+                "I could not transcribe your audio. Please try again with a clearer recording.",
+            )
         if self.voice_agent is None:
             self.voice_agent = EcoSentinelVoiceAgent()
         response = await self.voice_agent.answer_environmental_query(

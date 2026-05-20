@@ -42,13 +42,17 @@ class OpenAQClient:
         headers = {"Accept": "application/json"}
         if self.api_key:
             headers["X-API-Key"] = self.api_key
-        self._client = httpx.AsyncClient(base_url=self.BASE_URL, timeout=self._timeout, headers=headers)
+        self._client = httpx.AsyncClient(
+            base_url=self.BASE_URL, timeout=self._timeout, headers=headers
+        )
 
     async def close(self) -> None:
         """Close underlying HTTP resources."""
         await self._client.aclose()
 
-    async def _get_json(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any] | None:
+    async def _get_json(
+        self, path: str, params: dict[str, Any] | None = None
+    ) -> dict[str, Any] | None:
         """GET JSON with retry and backoff."""
         cache_key = f"{path}|{params or {}}"
         cached = self._cache.get(cache_key)
@@ -81,7 +85,9 @@ class OpenAQClient:
             return AirParameter.NO2
         return None
 
-    async def get_nearest_stations(self, lat: float, lon: float, radius_km: int = 25) -> list[dict[str, Any]]:
+    async def get_nearest_stations(
+        self, lat: float, lon: float, radius_km: int = 25
+    ) -> list[dict[str, Any]]:
         """Return nearest locations around coordinates, with fallback to known station."""
         data = await self._get_json(
             "/locations",
@@ -93,8 +99,19 @@ class OpenAQClient:
         )
         results = data.get("results", []) if data else []
         if not results:
-            logger.warning("No stations near (%.4f, %.4f) — using fallback station %s", lat, lon, DEFAULT_FALLBACK_STATION_ID)
-            return [{"id": DEFAULT_FALLBACK_STATION_ID, "name": "Bengaluru (fallback)", "city": "Bengaluru"}]
+            logger.warning(
+                "No stations near (%.4f, %.4f) — using fallback station %s",
+                lat,
+                lon,
+                DEFAULT_FALLBACK_STATION_ID,
+            )
+            return [
+                {
+                    "id": DEFAULT_FALLBACK_STATION_ID,
+                    "name": "Bengaluru (fallback)",
+                    "city": "Bengaluru",
+                }
+            ]
         return results
 
     async def get_latest_readings(self, station_ids: list[int]) -> list[AirQualityReading]:
@@ -180,15 +197,18 @@ class OpenAQClient:
                 )
                 if not data:
                     continue
-                values = [float(item.get("value", 0.0)) for item in data.get("results", []) if item.get("value") is not None]
+                values = [
+                    float(item.get("value", 0.0))
+                    for item in data.get("results", [])
+                    if item.get("value") is not None
+                ]
                 if not values:
                     continue
                 sums[parameter] += sum(values)
                 counts[parameter] += len(values)
 
         return {
-            key: (sums[key] / counts[key]) if counts[key] else 0.0
-            for key in ("pm25", "co2", "no2")
+            key: (sums[key] / counts[key]) if counts[key] else 0.0 for key in ("pm25", "co2", "no2")
         }
 
     async def get_india_hotspots(self) -> list[dict[str, Any]]:
@@ -219,7 +239,9 @@ class OpenAQClient:
                 "timestamp": latest.get("datetime"),
             }
 
-        results = await asyncio.gather(*[_fetch_pm25(loc) for loc in locations], return_exceptions=True)
+        results = await asyncio.gather(
+            *[_fetch_pm25(loc) for loc in locations], return_exceptions=True
+        )
         hotspots = [r for r in results if isinstance(r, dict)]
         hotspots.sort(key=lambda item: item["pm25"], reverse=True)
         return hotspots[:10]

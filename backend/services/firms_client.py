@@ -164,10 +164,7 @@ class FIRMSClient:
 
         high_conf_events = [event for event in events if event.confidence == "high"]
         states_affected = sorted(
-            {
-                self._nearest_state(event.latitude, event.longitude)
-                for event in high_conf_events
-            }
+            {self._nearest_state(event.latitude, event.longitude) for event in high_conf_events}
         )
 
         nearest_fire: FireEvent | None = None

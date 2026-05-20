@@ -45,7 +45,9 @@ class ProphetModelService:
 
     async def _fetch_pm25_history(self, station_id: int) -> list[dict[str, Any]]:
         """Fetch 30 days of PM2.5 history from OpenAQ client."""
-        return await self.openaq_client.get_historical_data(station_id=station_id, parameter="pm25", days=30)
+        return await self.openaq_client.get_historical_data(
+            station_id=station_id, parameter="pm25", days=30
+        )
 
     @staticmethod
     def _to_dataframe(history: list[dict[str, Any]]) -> pd.DataFrame:
@@ -92,7 +94,9 @@ class ProphetModelService:
             for i in range(hours_ahead)
         ]
 
-    async def predict_air_quality(self, station_id: int, hours_ahead: int = 24) -> AirQualityForecast:
+    async def predict_air_quality(
+        self, station_id: int, hours_ahead: int = 24
+    ) -> AirQualityForecast:
         """Predict next PM2.5 values in 1-hour intervals."""
         cache_key = f"{station_id}:{hours_ahead}"
         now = datetime.now(UTC)
@@ -134,7 +138,9 @@ class ProphetModelService:
                 )
                 model.add_country_holidays(country_name="IN")
                 model.fit(frame)
-                future = model.make_future_dataframe(periods=hours_ahead, freq="h", include_history=False)
+                future = model.make_future_dataframe(
+                    periods=hours_ahead, freq="h", include_history=False
+                )
                 pred = model.predict(future)
 
                 points: list[ForecastPrediction] = []
@@ -164,4 +170,6 @@ class ProphetModelService:
             return forecast
         except Exception as exc:  # noqa: BLE001
             logger.error("predict_air_quality failed for station %s: %s", station_id, exc)
-            return AirQualityForecast(location=f"station_{station_id}", predictions=[], generated_at=now)
+            return AirQualityForecast(
+                location=f"station_{station_id}", predictions=[], generated_at=now
+            )

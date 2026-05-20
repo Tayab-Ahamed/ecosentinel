@@ -89,7 +89,9 @@ class EcoSentinelVoiceAgent:
             logger.error("Live data fetch failed for %s %s: %s", method, path, exc)
             return {}
 
-    async def _fetch_relevant_data(self, question: str, location: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    async def _fetch_relevant_data(
+        self, question: str, location: dict[str, Any]
+    ) -> tuple[dict[str, Any], list[str]]:
         """Fetch live context based on question intent."""
         data_used: list[str] = []
         fetched_data: dict[str, Any] = {}
@@ -99,7 +101,9 @@ class EcoSentinelVoiceAgent:
 
         async with httpx.AsyncClient(timeout=httpx.Timeout(15.0)) as client:
             if self._needs_air_data(question):
-                air_near = await self._fetch_json(client, "GET", "/air/nearest", params={"lat": lat, "lon": lon})
+                air_near = await self._fetch_json(
+                    client, "GET", "/air/nearest", params={"lat": lat, "lon": lon}
+                )
                 air_city = {}
                 if city and city.lower() != "unknown":
                     air_city = await self._fetch_json(client, "GET", f"/air/city/{city}")
@@ -107,7 +111,9 @@ class EcoSentinelVoiceAgent:
                 data_used.extend(["air/nearest"] + (["air/city"] if air_city else []))
 
             if self._needs_fire_data(question):
-                fires_near = await self._fetch_json(client, "GET", "/fires/near", params={"lat": lat, "lon": lon, "radius": 150})
+                fires_near = await self._fetch_json(
+                    client, "GET", "/fires/near", params={"lat": lat, "lon": lon, "radius": 150}
+                )
                 fire_summary = await self._fetch_json(client, "GET", "/fires/summary")
                 fetched_data["fire_data"] = {"nearby_fires": fires_near, "summary": fire_summary}
                 data_used.extend(["fires/near", "fires/summary"])
@@ -119,7 +125,9 @@ class EcoSentinelVoiceAgent:
                 data_used.extend(["waste/hotspots", "waste/impact-stats"])
 
             if self._needs_forecast_data(question):
-                current_air = await self._fetch_json(client, "GET", "/air/nearest", params={"lat": lat, "lon": lon})
+                current_air = await self._fetch_json(
+                    client, "GET", "/air/nearest", params={"lat": lat, "lon": lon}
+                )
                 forecast = await self._fetch_json(
                     client,
                     "GET",
@@ -158,9 +166,13 @@ class EcoSentinelVoiceAgent:
             fetched_data["note"] = "No specific keyword matched; using general advisory mode."
         return fetched_data, data_used
 
-    async def answer_environmental_query(self, question: str, location: dict[str, Any]) -> VoiceResponse:
+    async def answer_environmental_query(
+        self, question: str, location: dict[str, Any]
+    ) -> VoiceResponse:
         """Answer environmental question with live backend context."""
-        fetched_data, data_used = await self._fetch_relevant_data(question=question, location=location)
+        fetched_data, data_used = await self._fetch_relevant_data(
+            question=question, location=location
+        )
         city = str(location.get("city", "Unknown"))
         today = datetime.now(UTC).date().isoformat()
         system_prompt = (
@@ -182,7 +194,9 @@ class EcoSentinelVoiceAgent:
             )
 
         try:
-            response = await self._llm.ainvoke([SystemMessage(content=system_prompt), HumanMessage(content=question)])
+            response = await self._llm.ainvoke(
+                [SystemMessage(content=system_prompt), HumanMessage(content=question)]
+            )
             answer_text = str(response.content).strip()
             return VoiceResponse(
                 question_text=question,
@@ -206,10 +220,14 @@ class EcoSentinelVoiceAgent:
         location: dict[str, Any],
     ) -> VoiceResponse:
         """Answer with conversational context for follow-up questions."""
-        fetched_data, data_used = await self._fetch_relevant_data(question=question, location=location)
+        fetched_data, data_used = await self._fetch_relevant_data(
+            question=question, location=location
+        )
         city = str(location.get("city", "Unknown"))
         today = datetime.now(UTC).date().isoformat()
-        history_lines = [f"{item.get('role', 'user')}: {item.get('content', '')}" for item in messages[-8:]]
+        history_lines = [
+            f"{item.get('role', 'user')}: {item.get('content', '')}" for item in messages[-8:]
+        ]
         history_text = "\n".join(history_lines)
 
         system_prompt = (
