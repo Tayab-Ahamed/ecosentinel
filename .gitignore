@@ -44,6 +44,9 @@ Thumbs.db
 # Local databases
 *.db
 ecosentinel.db
+test_ecosentinel*.db
+verify_ecosentinel.db
+ci_test.db
 
 # Misc
 *.log

@@ -19,33 +19,23 @@ jobs:
 
   test-backend:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: ecosentinel
-          POSTGRES_PASSWORD: password
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install ruff pytest pytest-asyncio
+      - run: pip install pytest pytest-asyncio
       - run: pip install -r backend/requirements-base.txt -r backend/requirements-dev.txt
       - working-directory: backend
         run: alembic upgrade head
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:password@postgres/ecosentinel
+          DATABASE_URL: sqlite+aiosqlite:///./test_ecosentinel_ci.db
       - working-directory: backend
         run: pytest -v
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:password@postgres/ecosentinel
+          DATABASE_URL: sqlite+aiosqlite:///./test_ecosentinel_ci.db
           ECOSENTINEL_SKIP_WHISPER_INIT: "1"
+          GEMINI_API_KEY: ""
 
   test-frontend:
     runs-on: ubuntu-latest
