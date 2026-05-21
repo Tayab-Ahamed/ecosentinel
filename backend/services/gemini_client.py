@@ -180,9 +180,7 @@ class GeminiClient:
             logger.error("Gemini analyze_waste_from_url failed: %s", exc)
             return self._fallback_classification()
 
-    async def verify_cleanup(
-        self, before_base64: str, after_bytes: bytes
-    ) -> dict[str, Any]:
+    async def verify_cleanup(self, before_base64: str, after_bytes: bytes) -> dict[str, Any]:
         """Verify before vs after waste cleanup image using Gemini Vision."""
         if not self._model:
             return {
@@ -208,9 +206,9 @@ class GeminiClient:
             "Analyze if the trash/waste from the 'Before' photo has been successfully cleared or substantially cleaned in the 'After' photo.\n"
             "Respond ONLY with a valid JSON object matching this schema:\n"
             "{\n"
-            "  \"verified\": true or false,\n"
-            "  \"confidence\": float between 0.0 and 1.0,\n"
-            "  \"feedback\": \"A short 1-2 sentence description explaining the visual findings.\"\n"
+            '  "verified": true or false,\n'
+            '  "confidence": float between 0.0 and 1.0,\n'
+            '  "feedback": "A short 1-2 sentence description explaining the visual findings."\n'
             "}\n"
             "Return only valid JSON, no markdown, no explanations."
         )
@@ -246,43 +244,55 @@ class GeminiClient:
             # Fallback recommendations if offline/no key
             tips = []
             if transport in ["car_petrol", "car_diesel", "bike"]:
-                tips.append({
-                    "title": "Switch Commutes to Public Transit or EV",
-                    "description": f"Commuting {transport_km} km daily by fossil fuel vehicles emits significant carbon. Opting for electric vehicle or public bus will save estimated emissions dramatically.",
-                    "impact": f"-{int(transport_km * 365 * 0.15)} kg CO2/year"
-                })
+                tips.append(
+                    {
+                        "title": "Switch Commutes to Public Transit or EV",
+                        "description": f"Commuting {transport_km} km daily by fossil fuel vehicles emits significant carbon. Opting for electric vehicle or public bus will save estimated emissions dramatically.",
+                        "impact": f"-{int(transport_km * 365 * 0.15)} kg CO2/year",
+                    }
+                )
             else:
-                tips.append({
-                    "title": "Active Mobility & Carpooling",
-                    "description": "Use walking or cycling for micro-trips under 2 km and carpool for long commutes to keep your green footprint exceptionally low.",
-                    "impact": "-120 kg CO2/year"
-                })
+                tips.append(
+                    {
+                        "title": "Active Mobility & Carpooling",
+                        "description": "Use walking or cycling for micro-trips under 2 km and carpool for long commutes to keep your green footprint exceptionally low.",
+                        "impact": "-120 kg CO2/year",
+                    }
+                )
 
             if food in ["meat_heavy", "mixed"]:
-                tips.append({
-                    "title": "Adopt a Vegetarian or Low-Meat Diet",
-                    "description": "Heavy animal protein food has a footprint 2.5x larger than standard plant nutrition. Integrating meat-free days saves substantial land and emissions.",
-                    "impact": "-620 kg CO2/year"
-                })
+                tips.append(
+                    {
+                        "title": "Adopt a Vegetarian or Low-Meat Diet",
+                        "description": "Heavy animal protein food has a footprint 2.5x larger than standard plant nutrition. Integrating meat-free days saves substantial land and emissions.",
+                        "impact": "-620 kg CO2/year",
+                    }
+                )
             else:
-                tips.append({
-                    "title": "Local & Seasonal Sourcing",
-                    "description": "By sourcing organics locally rather than importing packaged goods, you eliminate long-distance haul emissions from packaging lines.",
-                    "impact": "-240 kg CO2/year"
-                })
+                tips.append(
+                    {
+                        "title": "Local & Seasonal Sourcing",
+                        "description": "By sourcing organics locally rather than importing packaged goods, you eliminate long-distance haul emissions from packaging lines.",
+                        "impact": "-240 kg CO2/year",
+                    }
+                )
 
             if energy_source in ["grid_india", "mixed_india"]:
-                tips.append({
-                    "title": "Upgrade to Rooftop Solar Energy",
-                    "description": f"Generating domestic electricity from coal-heavy grid feeds causes high emissions. Switching even 50% of your usage to solar panels offsets carbon instantly.",
-                    "impact": f"-{int(energy_kwh * 12 * 0.5)} kg CO2/year"
-                })
+                tips.append(
+                    {
+                        "title": "Upgrade to Rooftop Solar Energy",
+                        "description": f"Generating domestic electricity from coal-heavy grid feeds causes high emissions. Switching even 50% of your usage to solar panels offsets carbon instantly.",
+                        "impact": f"-{int(energy_kwh * 12 * 0.5)} kg CO2/year",
+                    }
+                )
             else:
-                tips.append({
-                    "title": "Smart Home Standby Isolation",
-                    "description": "Switch off wall power adapters on smart devices and routers during night hours to cut standard vampire electricity draws by 80%.",
-                    "impact": "-90 kg CO2/year"
-                })
+                tips.append(
+                    {
+                        "title": "Smart Home Standby Isolation",
+                        "description": "Switch off wall power adapters on smart devices and routers during night hours to cut standard vampire electricity draws by 80%.",
+                        "impact": "-90 kg CO2/year",
+                    }
+                )
 
             return {"tips": tips}
 
@@ -295,11 +305,11 @@ class GeminiClient:
             f"Provide exactly 3 highly actionable, domestic, high-impact recommendations to reduce this carbon footprint. "
             f"Respond ONLY with a valid JSON object matching this schema:\n"
             f"{{\n"
-            f"  \"tips\": [\n"
+            f'  "tips": [\n'
             f"    {{\n"
-            f"      \"title\": \"Short specific title matching the tip\",\n"
-            f"      \"description\": \"Detailed 1-2 sentence instruction on what the user should do and how it saves carbon.\",\n"
-            f"      \"impact\": \"Estimated carbon saving, e.g., -450 kg CO2/year\"\n"
+            f'      "title": "Short specific title matching the tip",\n'
+            f'      "description": "Detailed 1-2 sentence instruction on what the user should do and how it saves carbon.",\n'
+            f'      "impact": "Estimated carbon saving, e.g., -450 kg CO2/year"\n'
             f"    }}\n"
             f"  ]\n"
             f"}}\n"
@@ -319,18 +329,17 @@ class GeminiClient:
                     {
                         "title": "Switch to Public Transit or EV",
                         "description": "Cut transport emissions by choosing high-efficiency transit options or active cycling.",
-                        "impact": "-350 kg CO2/year"
+                        "impact": "-350 kg CO2/year",
                     },
                     {
                         "title": "Embrace Plant-Based Meals",
                         "description": "Reduce animal protein consumption to reduce industrial land footprint and methane production.",
-                        "impact": "-480 kg CO2/year"
+                        "impact": "-480 kg CO2/year",
                     },
                     {
                         "title": "Solar Energy & LED Lights",
                         "description": "Switch standard grid usage to clean solar energy offsets carbon emission instantly.",
-                        "impact": "-550 kg CO2/year"
-                    }
+                        "impact": "-550 kg CO2/year",
+                    },
                 ]
             }
-

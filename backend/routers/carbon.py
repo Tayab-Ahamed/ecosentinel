@@ -19,7 +19,9 @@ class CarbonAdvisorRequest(BaseModel):
     transport: str = Field(..., description="Daily transport mode (e.g. car_petrol, bus, ev)")
     transport_km: float = Field(..., ge=0, description="Daily commute distance in kilometers")
     food: str = Field(..., description="Diet type (e.g. meat_heavy, vegetarian, vegan)")
-    energy_kwh: float = Field(..., ge=0, description="Monthly household electricity consumption in kWh")
+    energy_kwh: float = Field(
+        ..., ge=0, description="Monthly household electricity consumption in kWh"
+    )
     energy_source: str = Field(..., description="Electricity source (e.g. grid_india, solar)")
 
 
@@ -57,4 +59,6 @@ async def get_carbon_recommendations(payload: CarbonAdvisorRequest) -> dict[str,
         return result
     except Exception as exc:
         logger.exception("Carbon recommendations generation failed")
-        raise HTTPException(status_code=500, detail=f"Carbon recommendations generation failed: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Carbon recommendations generation failed: {exc}"
+        ) from exc

@@ -185,28 +185,48 @@ export function CarbonCalculator() {
   const [error, setError] = useState<string | null>(null);
 
   // Persistent gamified action state
-  const [commitments, setCommitments] = useState<CarbonRecommendation[]>([]);
-  const [ecoPoints, setEcoPoints] = useState(0);
-  const [accumulatedOffset, setAccumulatedOffset] = useState(0); // in kg CO2
-  const [completedDaily, setCompletedDaily] = useState<Record<string, boolean>>({});
-
-  // Initialize and load persistent local storage states
-  useEffect(() => {
+  const [commitments, setCommitments] = useState<CarbonRecommendation[]>(() => {
     if (typeof window !== "undefined") {
-      const savedCommitments = localStorage.getItem("eco_commitments");
-      const savedPoints = localStorage.getItem("eco_points");
-      const savedOffset = localStorage.getItem("eco_offset");
+      const saved = localStorage.getItem("eco_commitments");
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+
+  const [ecoPoints, setEcoPoints] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("eco_points");
+      return saved ? Number(saved) : 0;
+    }
+    return 0;
+  });
+
+  const [accumulatedOffset, setAccumulatedOffset] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("eco_offset");
+      return saved ? Number(saved) : 0;
+    }
+    return 0;
+  });
+
+  const [completedDaily, setCompletedDaily] = useState<Record<string, boolean>>(() => {
+    if (typeof window !== "undefined") {
       const savedDaily = localStorage.getItem("eco_daily_log");
       const savedDate = localStorage.getItem("eco_daily_date");
-
-      if (savedCommitments) setCommitments(JSON.parse(savedCommitments));
-      if (savedPoints) setEcoPoints(Number(savedPoints));
-      if (savedOffset) setAccumulatedOffset(Number(savedOffset));
-
       const today = new Date().toDateString();
       if (savedDate === today && savedDaily) {
-        setCompletedDaily(JSON.parse(savedDaily));
-      } else {
+        return JSON.parse(savedDaily);
+      }
+    }
+    return {};
+  });
+
+  // Initialize and check persistent daily calendar dates
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const today = new Date().toDateString();
+      const savedDate = localStorage.getItem("eco_daily_date");
+      if (savedDate !== today) {
         localStorage.setItem("eco_daily_date", today);
         localStorage.removeItem("eco_daily_log");
       }
@@ -253,8 +273,9 @@ export function CarbonCalculator() {
         energy_source: energySource,
       });
       setRecommendations(res.tips);
-    } catch (err: any) {
-      setError(err?.message || "Failed to fetch carbon advisor metrics.");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to fetch carbon advisor metrics.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -542,7 +563,7 @@ export function CarbonCalculator() {
                 </div>
                 <h4 className="mt-3 text-xs font-semibold text-white">No active environmental goals committed yet</h4>
                 <p className="mx-auto mt-1 max-w-[280px] text-[11px] leading-5 text-slate-500">
-                  Generate your custom AI Action Plan above and click "Commit to Goal" to populate your active tasks list.
+                  Generate your custom AI Action Plan above and click &quot;Commit to Goal&quot; to populate your active tasks list.
                 </p>
               </div>
             ) : (

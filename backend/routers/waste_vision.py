@@ -254,9 +254,9 @@ async def get_leaderboard(
     session: AsyncSession = Depends(get_session),
 ) -> list[LeaderboardEntry]:
     """Return community cleanup leaderboard standings."""
-    stmt = select(
-        func.sum(WasteHotspot.eco_points_awarded), func.count(WasteHotspot.id)
-    ).where(WasteHotspot.status == "cleaned")
+    stmt = select(func.sum(WasteHotspot.eco_points_awarded), func.count(WasteHotspot.id)).where(
+        WasteHotspot.status == "cleaned"
+    )
     result = await session.execute(stmt)
     row = result.first()
 
@@ -278,4 +278,3 @@ async def get_leaderboard(
 
     standing.sort(key=lambda x: x.points, reverse=True)
     return standing
-

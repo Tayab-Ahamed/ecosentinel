@@ -39,9 +39,7 @@ def upgrade() -> None:
     op.create_index(
         op.f("ix_wastehotspot_reported_at"), "wastehotspot", ["reported_at"], unique=False
     )
-    op.create_index(
-        op.f("ix_wastehotspot_status"), "wastehotspot", ["status"], unique=False
-    )
+    op.create_index(op.f("ix_wastehotspot_status"), "wastehotspot", ["status"], unique=False)
 
 
 def downgrade() -> None:

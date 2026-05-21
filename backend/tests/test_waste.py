@@ -8,8 +8,10 @@ from main import app
 
 def test_waste_flow_lifecycle() -> None:
     """Test the full lifecycle of a waste hotspot: report, retrieve, verify cleanup, and check stats/leaderboard."""
-    dummy_image_b64 = "data:image/jpeg;base64," + base64.b64encode(b"dummy_before_image_bytes").decode("utf-8")
-    
+    dummy_image_b64 = "data:image/jpeg;base64," + base64.b64encode(
+        b"dummy_before_image_bytes"
+    ).decode("utf-8")
+
     with TestClient(app) as client:
         # 1. Report a new hotspot
         report_payload = {
@@ -17,7 +19,7 @@ def test_waste_flow_lifecycle() -> None:
             "lon": 77.5946,
             "waste_type": "plastic",
             "severity": 4,
-            "image_base64": dummy_image_b64
+            "image_base64": dummy_image_b64,
         }
         report_response = client.post("/api/waste/report-hotspot", json=report_payload)
         assert report_response.status_code == 200, report_response.text
@@ -28,7 +30,7 @@ def test_waste_flow_lifecycle() -> None:
         assert report_data["severity"] == 4
         assert report_data["image_base64"] == dummy_image_b64
         assert report_data["eco_points_awarded"] == 0
-        
+
         hotspot_id = report_data["id"]
 
         # 2. Get list of hotspots (GeoJSON format)
@@ -38,7 +40,7 @@ def test_waste_flow_lifecycle() -> None:
         assert hotspots_data["type"] == "FeatureCollection"
         features = hotspots_data["features"]
         assert len(features) >= 1
-        
+
         # Find our reported hotspot in the collection
         our_feature = next((f for f in features if f["properties"]["id"] == hotspot_id), None)
         assert our_feature is not None
@@ -56,7 +58,7 @@ def test_waste_flow_lifecycle() -> None:
         dummy_after_bytes = b"dummy_after_image_bytes"
         verify_response = client.post(
             f"/api/waste/verify-cleanup/{hotspot_id}",
-            files={"image": ("after.jpg", dummy_after_bytes, "image/jpeg")}
+            files={"image": ("after.jpg", dummy_after_bytes, "image/jpeg")},
         )
         assert verify_response.status_code == 200, verify_response.text
         verify_data = verify_response.json()
@@ -67,7 +69,9 @@ def test_waste_flow_lifecycle() -> None:
         # 5. Check hotspot status updated to cleaned
         hotspots_response_2 = client.get("/api/waste/hotspots")
         hotspots_data_2 = hotspots_response_2.json()
-        our_feature_2 = next((f for f in hotspots_data_2["features"] if f["properties"]["id"] == hotspot_id), None)
+        our_feature_2 = next(
+            (f for f in hotspots_data_2["features"] if f["properties"]["id"] == hotspot_id), None
+        )
         assert our_feature_2 is not None
         assert our_feature_2["properties"]["status"] == "cleaned"
         assert our_feature_2["properties"]["cleanup_image_base64"] is not None
@@ -78,9 +82,11 @@ def test_waste_flow_lifecycle() -> None:
         assert leaderboard_response.status_code == 200
         leaderboard_data = leaderboard_response.json()
         assert len(leaderboard_data) >= 1
-        
+
         # User (Anonymous) should have the awarded points
-        user_entry = next((item for item in leaderboard_data if "You (Anonymous)" in item["username"]), None)
+        user_entry = next(
+            (item for item in leaderboard_data if "You (Anonymous)" in item["username"]), None
+        )
         assert user_entry is not None
         assert user_entry["points"] >= 200
         assert user_entry["cleaned_count"] >= 1

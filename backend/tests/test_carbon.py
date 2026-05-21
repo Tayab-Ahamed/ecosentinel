@@ -15,13 +15,13 @@ def test_carbon_recommendations_valid_payload() -> None:
     }
     with TestClient(app) as client:
         response = client.post("/api/carbon/recommendations", json=payload)
-    
+
     assert response.status_code == 200
     body = response.json()
     assert "tips" in body
     assert isinstance(body["tips"], list)
     assert len(body["tips"]) == 3
-    
+
     for tip in body["tips"]:
         assert "title" in tip
         assert "description" in tip
