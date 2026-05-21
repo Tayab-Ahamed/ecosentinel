@@ -53,7 +53,7 @@ function ExportButton({ chartRef }: { chartRef: React.RefObject<HTMLDivElement |
     <button
       type="button"
       onClick={handleExport}
-      className="rounded-full border border-border bg-slate-950/35 px-3 py-1.5 text-xs text-slate-300 transition hover:border-sky-300/30 hover:text-white"
+      className="rounded-full border border-border bg-slate-950/35 px-3 py-1.5 text-xs text-slate-300 transition hover:border-secondary/30 hover:text-white"
     >
       📥 Export
     </button>
@@ -200,7 +200,7 @@ export function AQIChart({
             </div>
           ) : loading ? (
             <div className="flex h-full flex-col items-center justify-center gap-4 text-sm text-slate-400">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-sky-300/20 border-t-sky-300" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-secondary/20 border-t-secondary" />
               Building your PM2.5 timeline…
             </div>
           ) : (
@@ -208,8 +208,8 @@ export function AQIChart({
               <ComposedChart data={chartPoints} margin={{ top: 10, right: 20, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id="historicalFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#38bdf8" stopOpacity={0.03} />
+                    <stop offset="0%" stopColor="#4cd7f6" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="#4cd7f6" stopOpacity={0.03} />
                   </linearGradient>
                   <linearGradient id="forecastFill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#fcd34d" stopOpacity={0.25} />
@@ -236,7 +236,7 @@ export function AQIChart({
                 <ReferenceLine y={200} stroke="#fb7185" strokeDasharray="5 4" strokeOpacity={0.7}>
                   <Label value="Poor" position="insideRight" fill="#fb7185" fontSize={10} />
                 </ReferenceLine>
-                <Area type="monotone" dataKey="historical" name="Historical" stroke="#38bdf8" strokeWidth={2.5} fill="url(#historicalFill)" dot={false} />
+                <Area type="monotone" dataKey="historical" name="Historical" stroke="#4cd7f6" strokeWidth={2.5} fill="url(#historicalFill)" dot={false} />
                 <Area type="monotone" dataKey="forecast" name="Forecast" stroke="#fcd34d" strokeWidth={2} strokeDasharray="7 4" fill="url(#forecastFill)" dot={false} />
               </ComposedChart>
             </ResponsiveContainer>

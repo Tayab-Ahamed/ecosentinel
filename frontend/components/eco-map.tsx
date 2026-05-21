@@ -151,13 +151,13 @@ function WastePopupContent({ hotspot, onVerified }: WastePopupContentProps) {
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
                   Clean this site and earn points!
                 </label>
-                <div className="relative flex items-center justify-center rounded-lg border border-dashed border-sky-300 bg-sky-50/50 hover:bg-sky-50 transition cursor-pointer p-2 text-center text-xs">
+                <div className="relative flex items-center justify-center rounded-lg border border-dashed border-secondary bg-secondary/5 hover:bg-secondary/10 transition cursor-pointer p-2 text-center text-xs">
                   {uploading ? (
-                    <span className="text-sky-700 flex items-center gap-1">
-                      <span className="animate-spin text-sky-600">&#9696;</span> Verifying...
+                    <span className="text-secondary flex items-center gap-1">
+                      <span className="animate-spin text-secondary">&#9696;</span> Verifying...
                     </span>
                   ) : (
-                    <span className="text-sky-600 font-medium">Upload cleanup photo</span>
+                    <span className="text-secondary font-medium">Upload cleanup photo</span>
                   )}
                   <input
                     type="file"
@@ -282,7 +282,7 @@ export function EcoMap({ lat, lon, className, demoMode = false }: EcoMapProps) {
     <section className={`panel subtle-ring overflow-hidden ${className ?? ""}`}>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div>
-          <div className="flex items-center gap-2 text-sm uppercase tracking-[0.22em] text-sky-200/70">
+          <div className="flex items-center gap-2 text-sm uppercase tracking-[0.22em] text-secondary/70">
             <MapIcon className="h-4 w-4" />
             Interactive Map
           </div>
@@ -303,7 +303,7 @@ export function EcoMap({ lat, lon, className, demoMode = false }: EcoMapProps) {
           <button
             type="button"
             onClick={() => void fetchMapData()}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-slate-950/30 px-3 py-1.5 text-sm text-slate-100 transition hover:border-sky-400/40 hover:bg-slate-900"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-slate-950/30 px-3 py-1.5 text-sm text-slate-100 transition hover:border-secondary/40 hover:bg-slate-900"
           >
             <RefreshIcon className="h-4 w-4" />
             Refresh
@@ -321,7 +321,7 @@ export function EcoMap({ lat, lon, className, demoMode = false }: EcoMapProps) {
               {
                 key: "air" as const,
                 label: "Air quality",
-                tint: "#38bdf8",
+                tint: "#4cd7f6",
               },
               {
                 key: "fire" as const,
@@ -354,7 +354,7 @@ export function EcoMap({ lat, lon, className, demoMode = false }: EcoMapProps) {
                       [item.key]: !current[item.key],
                     }))
                   }
-                  className="h-4 w-4 accent-sky-400"
+                  className="h-4 w-4 accent-secondary"
                 />
               </label>
             ))}
@@ -461,7 +461,7 @@ export function EcoMap({ lat, lon, className, demoMode = false }: EcoMapProps) {
 
           {loading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-slate-950/45 backdrop-blur-sm">
-              <div className="rounded-full border border-sky-300/25 bg-slate-900/90 px-4 py-2 text-sm text-sky-100">
+              <div className="rounded-full border border-secondary/25 bg-slate-900/90 px-4 py-2 text-sm text-secondary">
                 Loading live layers...
               </div>
             </div>

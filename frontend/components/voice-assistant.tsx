@@ -88,7 +88,7 @@ function AudioVisualizer({ isActive, analyser }: {
         <motion.span
           key={i}
           className="w-2.5 rounded-full"
-          style={{ backgroundColor: isActive ? "#38bdf8" : "#94a3b8" }}
+          style={{ backgroundColor: isActive ? "#4cd7f6" : "#94a3b8" }}
           animate={{ height: isActive ? heights[i]! * amplitude : heights[i]! * 0.3 }}
           transition={{ duration: 0.06 }}
         />
@@ -264,7 +264,7 @@ export function VoiceAssistant({ initialLat, initialLon, city = BENGALURU_LOCATI
         <div className="border-b border-border px-5 py-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-sky-200/70">Voice Assistant</p>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-secondary/70">Voice Assistant</p>
               <h2 className="mt-1.5 text-xl font-semibold text-white">Ask live environmental questions</h2>
             </div>
             <div className="rounded-full border border-border bg-slate-950/35 px-3 py-2 text-xs text-slate-200">
@@ -284,7 +284,7 @@ export function VoiceAssistant({ initialLat, initialLon, city = BENGALURU_LOCATI
             onClick={() => void toggleRecording()}
             disabled={voiceState === "processing"}
             className="relative flex h-44 w-44 items-center justify-center rounded-full border text-white transition"
-            style={{ borderColor: voiceState === "recording" ? "rgba(251,113,133,0.5)" : "rgba(56,189,248,0.25)", background: voiceState === "recording" ? "rgba(251,113,133,0.07)" : "rgba(15,29,49,0.5)" }}
+            style={{ borderColor: voiceState === "recording" ? "rgba(251,113,133,0.5)" : "rgba(76,215,246,0.25)", background: voiceState === "recording" ? "rgba(251,113,133,0.07)" : "rgba(15,29,49,0.5)" }}
             animate={voiceState === "recording" ? { boxShadow: ["0 0 0 0 rgba(251,113,133,0.3)", "0 0 0 28px rgba(251,113,133,0)", "0 0 0 0 rgba(251,113,133,0)"] } : { scale: [1, 1.025, 1] }}
             transition={voiceState === "recording" ? { repeat: Infinity, duration: 1.4 } : { repeat: Infinity, duration: 3 }}
           >
@@ -293,9 +293,9 @@ export function VoiceAssistant({ initialLat, initialLon, city = BENGALURU_LOCATI
             ) : voiceState === "recording" ? (
               <AudioVisualizer isActive={true} analyser={analyserRef.current} />
             ) : voiceState === "processing" ? (
-              <motion.div className="h-12 w-12 rounded-full border-2 border-sky-300/25 border-t-sky-300" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }} />
+              <motion.div className="h-12 w-12 rounded-full border-2 border-secondary/25 border-t-secondary" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }} />
             ) : (
-              <MicIcon className="h-16 w-16 text-sky-200" />
+              <MicIcon className="h-16 w-16 text-secondary" />
             )}
           </motion.button>
 
@@ -319,7 +319,7 @@ export function VoiceAssistant({ initialLat, initialLon, city = BENGALURU_LOCATI
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
                 disabled={voiceState !== "idle"}
-                className="rounded-full border border-border bg-slate-950/30 px-3.5 py-2 text-xs text-slate-200 transition hover:border-sky-300/35 hover:bg-slate-900 active:scale-95 disabled:opacity-40"
+                className="rounded-full border border-border bg-slate-950/30 px-3.5 py-2 text-xs text-slate-200 transition hover:border-secondary/35 hover:bg-slate-900 active:scale-95 disabled:opacity-40"
               >
                 {q}
               </motion.button>
@@ -346,7 +346,7 @@ export function VoiceAssistant({ initialLat, initialLon, city = BENGALURU_LOCATI
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
                     className={`max-w-[90%] rounded-[1.2rem] px-4 py-3 text-sm leading-7 ${
-                      msg.role === "user" ? "ml-auto bg-sky-400 text-slate-950" : "bg-slate-950/40 text-slate-100"
+                      msg.role === "user" ? "ml-auto bg-secondary text-slate-950 shadow" : "bg-slate-950/40 text-slate-100"
                     }`}
                   >
                     <p>{msg.text}</p>
@@ -360,7 +360,7 @@ export function VoiceAssistant({ initialLat, initialLon, city = BENGALURU_LOCATI
                               <span>{(msg.confidence * 100).toFixed(0)}%</span>
                             </div>
                             <div className="h-1 rounded-full bg-slate-800">
-                              <motion.div className="h-1 rounded-full bg-sky-400" initial={{ width: 0 }} animate={{ width: `${msg.confidence * 100}%` }} transition={{ duration: 0.6 }} />
+                              <motion.div className="h-1 rounded-full bg-secondary" initial={{ width: 0 }} animate={{ width: `${msg.confidence * 100}%` }} transition={{ duration: 0.6 }} />
                             </div>
                           </div>
                         )}
@@ -407,10 +407,10 @@ export function VoiceAssistant({ initialLat, initialLon, city = BENGALURU_LOCATI
               onChange={(e) => setInput(e.target.value)}
               placeholder="Type a question…"
               disabled={voiceState !== "idle"}
-              className="flex-1 rounded-full border border-border bg-slate-950/35 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-300/40 disabled:opacity-40"
+              className="flex-1 rounded-full border border-border bg-slate-950/35 px-4 py-3 text-sm text-white outline-none transition focus:border-secondary/40 disabled:opacity-40"
             />
             <button type="submit" disabled={voiceState !== "idle"}
-              className="inline-flex items-center gap-2 rounded-full bg-sky-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-300 active:scale-95 disabled:opacity-40">
+              className="inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-secondary/80 active:scale-95 disabled:opacity-40">
               <SendIcon className="h-4 w-4" /> Send
             </button>
           </form>

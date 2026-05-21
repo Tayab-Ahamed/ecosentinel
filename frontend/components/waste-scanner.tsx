@@ -231,7 +231,7 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
             onClick={() => setActiveTab("scan")}
             className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
               activeTab === "scan"
-                ? "bg-sky-400 text-slate-950 shadow"
+                ? "bg-secondary text-slate-950 shadow"
                 : "text-slate-400 hover:text-white"
             }`}
           >
@@ -242,7 +242,7 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
             onClick={() => setActiveTab("leaderboard")}
             className={`px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
               activeTab === "leaderboard"
-                ? "bg-sky-400 text-slate-950 shadow"
+                ? "bg-secondary text-slate-950 shadow"
                 : "text-slate-400 hover:text-white"
             }`}
           >
@@ -283,10 +283,10 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
                     <div className="pointer-events-none absolute inset-0">
                       {/* Corner brackets */}
                       {[["top-4 left-4", "border-t-2 border-l-2"], ["top-4 right-4", "border-t-2 border-r-2"], ["bottom-4 left-4", "border-b-2 border-l-2"], ["bottom-4 right-4", "border-b-2 border-r-2"]].map(([pos, border]) => (
-                        <div key={pos} className={`absolute ${pos} h-8 w-8 ${border} border-sky-400/60 rounded-sm`} />
+                        <div key={pos} className={`absolute ${pos} h-8 w-8 ${border} border-secondary/60 rounded-sm`} />
                       ))}
                       {/* Animated scan line */}
-                      <div className="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-sky-400/80 to-transparent animate-scan-line" />
+                      <div className="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-secondary/80 to-transparent animate-scan-line" />
                       <div className="absolute bottom-5 left-0 right-0 text-center">
                         <span className="rounded-full bg-slate-950/70 px-4 py-2 text-xs text-slate-200 backdrop-blur">
                           Point camera at waste or upload an image
@@ -298,7 +298,7 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
                   {/* Analyzing overlay */}
                   {isAnalyzing && previewUrl && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950/75 backdrop-blur-sm">
-                      <motion.div className="h-12 w-12 rounded-full border-2 border-sky-300/30 border-t-sky-300" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} />
+                      <motion.div className="h-12 w-12 rounded-full border-2 border-secondary/30 border-t-secondary" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} />
                       <p className="text-sm font-medium text-white">Gemini Vision analyzing…</p>
                     </div>
                   )}
@@ -308,11 +308,11 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
 
                 <div className="flex flex-wrap gap-3">
                   <button type="button" onClick={() => void handleTakePhoto()}
-                    className="inline-flex items-center gap-2 rounded-full bg-sky-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-sky-300 active:scale-95">
+                    className="inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-secondary/80 active:scale-95">
                     <CameraIcon className="h-4 w-4" /> Take Photo
                   </button>
                   <button type="button" onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-2 rounded-full border border-border bg-slate-950/35 px-4 py-2.5 text-sm font-semibold text-white transition hover:border-sky-300/35 hover:bg-slate-900 active:scale-95">
+                    className="inline-flex items-center gap-2 rounded-full border border-border bg-slate-950/35 px-4 py-2.5 text-sm font-semibold text-white transition hover:border-secondary/35 hover:bg-slate-900 active:scale-95">
                     <UploadIcon className="h-4 w-4" /> Upload Image
                   </button>
                   {classification && (
@@ -353,7 +353,7 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
                   {isAnalyzing ? (
                     <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                       className="flex min-h-[420px] flex-col items-center justify-center gap-6 rounded-[1.2rem] border border-border bg-slate-950/35 text-center px-6">
-                      <motion.div className="h-16 w-16 rounded-full border-2 border-sky-300/25 border-t-sky-300" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.1, ease: "linear" }} />
+                      <motion.div className="h-16 w-16 rounded-full border-2 border-secondary/25 border-t-secondary" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.1, ease: "linear" }} />
                       <div>
                         <p className="text-lg font-semibold text-white">Analyzing with AI…</p>
                         <p className="mt-2 text-sm text-slate-400 leading-6">Classifying waste, estimating impact, and checking local PM2.5.</p>
@@ -439,7 +439,7 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
                   ) : (
                     <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                       className="flex min-h-[420px] flex-col items-center justify-center gap-5 rounded-[1.2rem] border border-dashed border-border bg-slate-950/20 px-6 text-center">
-                      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-900/60 text-sky-200">
+                      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-900/60 text-secondary">
                         <WasteIcon className="h-9 w-9" />
                       </div>
                       <div>
@@ -467,7 +467,7 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
             <div className="panel subtle-ring overflow-hidden">
               <div className="border-b border-border px-5 py-4 flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.25em] text-sky-200/70">Gamified Rankings</p>
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-secondary/70">Gamified Rankings</p>
                   <h2 className="mt-1.5 text-xl font-semibold text-white">Community Leaderboard</h2>
                 </div>
                 <button
@@ -482,7 +482,7 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
               <div className="p-5">
                 {loadingLeaderboard ? (
                   <div className="flex h-64 flex-col items-center justify-center gap-3">
-                    <div className="h-10 w-10 rounded-full border-2 border-sky-400/25 border-t-sky-400 animate-spin" />
+                    <div className="h-10 w-10 rounded-full border-2 border-secondary/25 border-t-secondary animate-spin" />
                     <p className="text-sm text-slate-400">Loading standings...</p>
                   </div>
                 ) : (
@@ -495,14 +495,14 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
                           key={user.username}
                           className={`flex items-center justify-between rounded-2xl border p-4 transition-all ${
                             isUser
-                              ? "bg-sky-400/10 border-sky-400/30 text-white shadow-lg shadow-sky-400/5"
+                              ? "bg-secondary/10 border-secondary/30 text-white shadow-lg shadow-secondary/5"
                               : "bg-slate-950/30 border-border text-slate-300"
                           }`}
                         >
                           <div className="flex items-center gap-4">
                             <span className="text-xl w-6 text-center font-bold">{medal}</span>
                             <div>
-                              <p className={`font-semibold ${isUser ? "text-sky-300" : "text-white"}`}>
+                              <p className={`font-semibold ${isUser ? "text-secondary" : "text-white"}`}>
                                 {user.username}
                               </p>
                               <p className="text-[11px] text-slate-400 mt-0.5">
@@ -511,7 +511,7 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className={`text-lg font-bold ${isUser ? "text-sky-300" : "text-slate-100"}`}>
+                            <span className={`text-lg font-bold ${isUser ? "text-secondary" : "text-slate-100"}`}>
                               {user.points}
                             </span>
                             <p className="text-[9px] uppercase tracking-wider text-slate-500 font-semibold">Eco Points</p>
@@ -651,14 +651,14 @@ function ActiveHotspotActionCard({ spot, onVerified }: ActiveHotspotActionCardPr
         </div>
       ) : (
         <div className="pt-1">
-          <div className="relative flex items-center justify-center rounded-xl border border-dashed border-sky-400/30 bg-sky-400/5 hover:bg-sky-400/10 transition cursor-pointer p-3 text-center text-xs">
+          <div className="relative flex items-center justify-center rounded-xl border border-dashed border-secondary/30 bg-secondary/5 hover:bg-secondary/10 transition cursor-pointer p-3 text-center text-xs">
             {uploading ? (
-              <span className="text-sky-300 flex items-center gap-2">
-                <span className="animate-spin text-sky-400">&#9696;</span>
+              <span className="text-secondary flex items-center gap-2">
+                <span className="animate-spin text-secondary">&#9696;</span>
                 AI Verifying Site Cleanup...
               </span>
             ) : (
-              <span className="text-sky-300 font-semibold flex items-center gap-1.5">
+              <span className="text-secondary font-semibold flex items-center gap-1.5">
                 🧹 Clean this site & upload photo
               </span>
             )}

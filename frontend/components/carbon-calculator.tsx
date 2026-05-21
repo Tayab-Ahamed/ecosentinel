@@ -77,10 +77,10 @@ function ProjectionChart({
   const getBarHeight = (val: number) => (val / maxVal) * chartHeight;
 
   const data = [
-    { label: "Current", value: current, color: "url(#cyanGlow)", border: "rgba(56,189,248,0.4)" },
-    { label: "Projected", value: projected, color: "url(#greenGlow)", border: "rgba(74,222,128,0.4)" },
+    { label: "Current", value: current, color: "url(#cyanGlow)", border: "rgba(76,215,246,0.4)" },
+    { label: "Projected", value: projected, color: "url(#greenGlow)", border: "rgba(78,222,163,0.4)" },
     { label: "India Avg", value: average, color: "url(#slateGlow)", border: "rgba(148,163,184,0.2)" },
-    { label: "Target", value: target, color: "url(#emeraldGlow)", border: "rgba(16,185,129,0.3)" },
+    { label: "Target", value: target, color: "url(#emeraldGlow)", border: "rgba(78,222,163,0.3)" },
   ];
 
   return (
@@ -92,12 +92,12 @@ function ProjectionChart({
         <svg viewBox="0 0 320 180" className="w-full max-w-[280px]">
           <defs>
             <linearGradient id="cyanGlow" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.85" />
-              <stop offset="100%" stopColor="#0284c7" stopOpacity="0.2" />
+              <stop offset="0%" stopColor="#4cd7f6" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.2" />
             </linearGradient>
             <linearGradient id="greenGlow" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#4ade80" stopOpacity="0.85" />
-              <stop offset="100%" stopColor="#16a34a" stopOpacity="0.2" />
+              <stop offset="0%" stopColor="#4edea3" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.2" />
             </linearGradient>
             <linearGradient id="slateGlow" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.4" />
@@ -105,7 +105,7 @@ function ProjectionChart({
             </linearGradient>
             <linearGradient id="emeraldGlow" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#10b981" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#047857" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#005236" stopOpacity="0.1" />
             </linearGradient>
           </defs>
 
@@ -127,7 +127,7 @@ function ProjectionChart({
                 {item.label === "Projected" && (
                   <rect
                     x={x - 3} y={y - 3} width={barW + 6} height={barH + 6}
-                    rx="6" ry="6" fill="#4ade80" opacity="0.12" className="blur-[3px]"
+                    rx="6" ry="6" fill="#4edea3" opacity="0.12" className="blur-[3px]"
                   />
                 )}
                 {/* The visual bar */}
@@ -346,7 +346,7 @@ export function CarbonCalculator() {
           <div className="space-y-7 p-6">
             {/* Transport */}
             <div>
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-sky-300/80">🚗 Daily Transport</p>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-secondary/80">🚗 Daily Transport</p>
               <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                 {(Object.entries(FACTORS.transport) as [TransportKey, { label: string }][]).map(([key, { label }]) => (
                   <button
@@ -355,7 +355,7 @@ export function CarbonCalculator() {
                     onClick={() => setTransportMode(key)}
                     className={`rounded-xl px-3 py-2 text-xs font-medium transition-all ${
                       transportMode === key
-                        ? "bg-sky-400/15 text-sky-200 ring-1 ring-sky-400/40"
+                        ? "bg-secondary/15 text-secondary ring-1 ring-secondary/40"
                         : "bg-slate-950/40 text-slate-400 hover:bg-slate-900"
                     }`}
                   >
@@ -370,7 +370,7 @@ export function CarbonCalculator() {
                 type="range" min={0} max={200} step={5}
                 value={transportKm}
                 onChange={(e) => setTransportKm(Number(e.target.value))}
-                className="w-full accent-sky-400"
+                className="w-full accent-secondary"
               />
               <div className="mt-1 flex justify-between text-[10px] text-slate-600">
                 <span>0 km</span><span>200 km</span>
@@ -518,8 +518,8 @@ export function CarbonCalculator() {
 
         {/* Gamified Environmental Action Center */}
         <div className="panel subtle-ring p-6 bg-slate-900/40 backdrop-blur-xl relative overflow-hidden">
-          <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
-          <div className="absolute left-0 bottom-0 h-40 w-40 rounded-full bg-sky-500/5 blur-3xl pointer-events-none" />
+          <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+          <div className="absolute left-0 bottom-0 h-40 w-40 rounded-full bg-secondary/5 blur-3xl pointer-events-none" />
 
           <div className="flex flex-col justify-between border-b border-border pb-4 sm:flex-row sm:items-center gap-4">
             <div>
@@ -540,17 +540,17 @@ export function CarbonCalculator() {
           {/* Gamified stats dashboard */}
           <div className="mt-5 grid grid-cols-2 gap-4">
             <div className="rounded-2xl bg-slate-950/60 p-4 text-center ring-1 ring-white/5 relative">
-              <span className="absolute left-1/2 top-3 h-2 w-16 -translate-x-1/2 rounded-full bg-emerald-500/10" />
+              <span className="absolute left-1/2 top-3 h-2 w-16 -translate-x-1/2 rounded-full bg-primary/10" />
               <p className="text-[10px] uppercase tracking-wider text-slate-400 mt-2">Gamified Points</p>
-              <p className="mt-1 text-2xl font-bold text-emerald-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.2)]">
-                {ecoPoints} <span className="text-xs font-semibold text-emerald-300/60">XP</span>
+              <p className="mt-1 text-2xl font-bold text-primary drop-shadow-[0_0_8px_rgba(78,222,163,0.2)]">
+                {ecoPoints} <span className="text-xs font-semibold text-primary/60">XP</span>
               </p>
             </div>
             <div className="rounded-2xl bg-slate-950/60 p-4 text-center ring-1 ring-white/5 relative">
-              <span className="absolute left-1/2 top-3 h-2 w-16 -translate-x-1/2 rounded-full bg-sky-500/10" />
+              <span className="absolute left-1/2 top-3 h-2 w-16 -translate-x-1/2 rounded-full bg-secondary/10" />
               <p className="text-[10px] uppercase tracking-wider text-slate-400 mt-2">Active CO₂ Offsets</p>
-              <p className="mt-1 text-2xl font-bold text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.2)]">
-                {accumulatedOffset.toFixed(2)} <span className="text-xs font-semibold text-sky-300/60">kg</span>
+              <p className="mt-1 text-2xl font-bold text-secondary drop-shadow-[0_0_8px_rgba(76,215,246,0.2)]">
+                {accumulatedOffset.toFixed(2)} <span className="text-xs font-semibold text-secondary/60">kg</span>
               </p>
             </div>
           </div>
@@ -599,7 +599,7 @@ export function CarbonCalculator() {
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-1.5 whitespace-nowrap">
-                        <span className="rounded-md bg-sky-500/10 px-2 py-0.5 text-[9px] font-bold text-sky-300">
+                        <span className="rounded-md bg-secondary/10 px-2 py-0.5 text-[9px] font-bold text-secondary">
                           {goal.impact}
                         </span>
                         <button
@@ -637,8 +637,8 @@ export function CarbonCalculator() {
           {/* Breakdown bars */}
           <div className="space-y-3 px-6 pb-6">
             {[
-              { label: "Transport", value: totals.transport, color: "#38bdf8", icon: "🚗" },
-              { label: "Food",      value: totals.food,      color: "#4ade80", icon: "🥗" },
+              { label: "Transport", value: totals.transport, color: "#4cd7f6", icon: "🚗" },
+              { label: "Food",      value: totals.food,      color: "#4edea3", icon: "🥗" },
               { label: "Energy",    value: totals.energy,    color: "#fcd34d", icon: "⚡" },
             ].map((row) => (
               <div key={row.label}>

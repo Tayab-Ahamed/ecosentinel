@@ -35,7 +35,7 @@ const EcoMap = dynamic(
     loading: () => (
       <div className="panel subtle-ring flex min-h-[540px] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-sky-300/20 border-t-sky-300" />
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-secondary/20 border-t-secondary" />
           <p className="text-sm text-slate-400">Loading map…</p>
         </div>
       </div>
@@ -146,7 +146,7 @@ function AQITicker({ hotspots }: { hotspots: IndiaHotspot[] }) {
   return (
     <div className="relative overflow-hidden border-b border-border bg-slate-950/60 px-4 py-2 text-xs">
       <div className="flex items-center gap-3">
-        <span className="shrink-0 rounded-sm bg-sky-400/15 px-2 py-0.5 font-semibold uppercase tracking-wider text-sky-300">
+        <span className="shrink-0 rounded-sm bg-secondary/15 px-2 py-0.5 font-semibold uppercase tracking-wider text-secondary">
           Live AQI
         </span>
         <div className="overflow-hidden">
@@ -331,7 +331,7 @@ export function EcoSentinelApp() {
           <aside className="panel subtle-ring sticky top-4 hidden h-[calc(100vh-5rem)] overflow-hidden lg:flex lg:flex-col">
             <div className="border-b border-border px-5 py-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-400/15 text-sky-300">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary/15 text-secondary">
                   <LeafIcon className="h-6 w-6" />
                 </div>
                 <div>
@@ -366,7 +366,7 @@ export function EcoSentinelApp() {
                     {isActive && (
                       <motion.span
                         layoutId="nav-pill"
-                        className="absolute right-4 h-1.5 w-1.5 rounded-full bg-sky-300"
+                        className="absolute right-4 h-1.5 w-1.5 rounded-full bg-primary"
                       />
                     )}
                   </motion.button>
@@ -412,14 +412,14 @@ export function EcoSentinelApp() {
               <div className="border-b border-border px-5 py-4">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.3em] text-sky-200/60">{viewTitle}</p>
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-secondary/60">{viewTitle}</p>
                     <h1 className="mt-1.5 text-2xl font-bold text-white leading-tight">
                       Real-time environmental monitoring
-                      {" "}<span className="text-sky-300">{location.city}</span>
+                      {" "}<span className="text-secondary">{location.city}</span>
                     </h1>
                   </div>
                   <div className="flex items-center gap-2 rounded-full border border-border bg-slate-950/35 px-4 py-2 text-xs text-slate-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-sky-400/70" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-secondary/70" />
                     {location.lat.toFixed(3)}, {location.lon.toFixed(3)}
                   </div>
                 </div>
@@ -429,7 +429,7 @@ export function EcoSentinelApp() {
                 <StatCard label="PM2.5" value={overviewLoading ? "—" : `${currentPm25.toFixed(1)} µg/m³`} tone={getPm25Color(currentPm25)} helper={primaryReading ? `${aqiCategory} · nearby station` : "Searching stations…"} loading={overviewLoading} />
                 <StatCard label="Active Fires" value={overviewLoading ? "—" : String(fireSummary.high_confidence_count)} tone="#fb7185" helper="High-confidence NASA detections" loading={overviewLoading} />
                 <StatCard label="Waste Reports" value={overviewLoading ? "—" : String(wasteCount)} tone="#4ade80" helper="Community hotspot reports" loading={overviewLoading} />
-                <StatCard label="AQI Category" value={overviewLoading ? "—" : aqiCategory} tone="#38bdf8" helper={isConnected ? "WebSocket live feed active" : "Polling API"} loading={overviewLoading} />
+                <StatCard label="AQI Category" value={overviewLoading ? "—" : aqiCategory} tone="#4cd7f6" helper={isConnected ? "WebSocket live feed active" : "Polling API"} loading={overviewLoading} />
               </div>
             </header>
 
@@ -497,7 +497,7 @@ export function EcoSentinelApp() {
               key={item.id}
               type="button"
               onClick={() => setActiveView(item.id)}
-              className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-2 transition-colors ${isActive ? "text-sky-300" : "text-slate-500"}`}
+              className={`flex flex-1 flex-col items-center gap-1 rounded-xl py-2 transition-colors ${isActive ? "text-secondary" : "text-slate-500"}`}
             >
               <span className={`transition-transform ${isActive ? "scale-110" : ""}`}>{item.icon}</span>
               <span className="text-[9px] font-medium">{item.label.split(" ")[0]}</span>
@@ -536,8 +536,8 @@ function AlertsPanel({ alerts }: { alerts: RealtimeAlert[] }) {
               </div>
               <span className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider"
                 style={{
-                  background: alert.severity === "critical" ? "rgba(251,113,133,0.14)" : alert.severity === "warning" ? "rgba(252,211,77,0.16)" : "rgba(56,189,248,0.14)",
-                  color: alert.severity === "critical" ? "#fecdd3" : alert.severity === "warning" ? "#fde68a" : "#bae6fd",
+                  background: alert.severity === "critical" ? "rgba(251,113,133,0.14)" : alert.severity === "warning" ? "rgba(252,211,77,0.16)" : "rgba(76,215,246,0.14)",
+                  color: alert.severity === "critical" ? "#fecdd3" : alert.severity === "warning" ? "#fde68a" : "#4cd7f6",
                 }}
               >{alert.severity}</span>
             </div>
@@ -553,7 +553,7 @@ function HotspotsPanel({ hotspots }: { hotspots: IndiaHotspot[] }) {
   return (
     <section className="panel subtle-ring overflow-hidden">
       <div className="border-b border-border px-5 py-4">
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-sky-200/70"><AirIcon className="h-4 w-4" /> India Hotspots</div>
+        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-secondary/70"><AirIcon className="h-4 w-4" /> India Hotspots</div>
         <h2 className="mt-1.5 text-lg font-semibold text-white">Highest PM2.5 from current OpenAQ feed</h2>
       </div>
       <div className="space-y-3 p-5">
