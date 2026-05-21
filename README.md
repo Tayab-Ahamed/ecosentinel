@@ -1,6 +1,6 @@
 # EcoSentinel
 
-An enterprise-grade, high-fidelity environmental intelligence platform providing real-time air quality indexing (AQI), satellite active wildfire tracking, computer-vision based waste classification, voice-driven AI assistance, and predictive PM2.5 forecasting. Built using a robust microservices-aligned architecture with FastAPI and Next.js, and styled using a custom high-fidelity neon glassmorphism theme from the **Stitch Design System**.
+An enterprise-grade, high-fidelity environmental intelligence platform providing real-time air quality indexing (AQI), satellite active wildfire tracking, computer-vision based waste classification, voice-driven interactive assistance, and predictive PM2.5 forecasting. Built using a robust microservices-aligned architecture with FastAPI and Next.js, and styled using a custom high-fidelity neon glassmorphism theme.
 
 [![CI](https://github.com/Tayab-Ahamed/ecosentinel/actions/workflows/ci.yml/badge.svg)](https://github.com/Tayab-Ahamed/ecosentinel/actions/workflows/ci.yml)
 
@@ -8,12 +8,12 @@ An enterprise-grade, high-fidelity environmental intelligence platform providing
 
 ## 🖥️ System Architecture
 
-EcoSentinel is designed around a decoupled, highly responsive architecture separating heavy predictive and analytical AI operations from critical UI interactions:
+EcoSentinel is designed around a decoupled, highly responsive architecture separating heavy predictive and analytical operations from critical UI interactions:
 
 ```text
                      ┌───────────────────────────────────┐
                      │       Next.js 16 Dashboard        │
-                     │  Stitch UI Theme · SVG Graph Engine│
+                     │  Custom UI Theme · SVG Graph Engine│
                      └─────────────────┬─────────────────┘
                                        │ REST / WebSockets
                      ┌─────────────────▼─────────────────┐
@@ -43,24 +43,24 @@ EcoSentinel is designed around a decoupled, highly responsive architecture separ
 * **NASA Active Fire Intelligence**: Real-time ingest of NASA FIRMS satellite data, enabling active wildfire hotspot detection, proximity-based searches, and comprehensive risk mitigation summaries.
 * **Responsive Leaflet Map Engine**: Layers mapping for real-time PM2.5 coordinates, active thermal anomalies, and community debris reports.
 
-### 2. Multi-Modal AI Integrations
+### 2. Multi-Modal Integrations
 * **Computer Vision Waste Scanner**: Multimodal image analysis using **Google Gemini Vision** models. Users capture or upload debris photos, and the model classifies the waste, calculates decomposed timelines, outputs environmental impact ratings, and renders standard disposal guides.
-* **Voice-Activated Environmental AI**: Conversational voice assistant leveraging **OpenAI Whisper** for high-accuracy speech translation, integrated with a FastAPI WebSockets channel (`/api/ws/voice-chat`) and grounded dynamically using real-time local openAQ and FIRMS telemetry feeds.
+* **Voice-Activated Environmental Assistant**: Conversational voice assistant leveraging **OpenAI Whisper** for high-accuracy speech translation, integrated with a FastAPI WebSockets channel (`/api/ws/voice-chat`) and grounded dynamically using real-time local openAQ and FIRMS telemetry feeds.
 
 ### 3. Predictive Environmental Modeling
 * **Prophet PM2.5 Forecasts**: Integrated **Facebook Prophet** forecasting engine providing 24-hour predictive timeline modeling of PM2.5.
 * **Safe Outdoor Activity Windows**: Algorithmic assessment of future air safety, highlighting time windows in the next 24 hours where PM2.5 levels are forecasted to be optimal for outdoor activity.
 
 ### 4. Interactive Carbon Reduction & Action Center
-* **AI Carbon Reduction Advisor**: Integrates deep learning recommendations with a fast offline mathematical fallback algorithm to construct custom, context-aware carbon plans.
+* **Carbon Reduction Advisor**: Integrates deep learning recommendations with a fast offline mathematical fallback algorithm to construct custom, context-aware carbon plans.
 * **Gamified Action Tracker**: Features persistent client-side tracking using standard `localStorage` schema design. Users commit to reduction goals, complete daily challenges, and dynamically scale up their **Eco-Points (XP)** and cumulative CO₂ offset metrics.
 * **Zero-Dependency SVG Projections**: Implements lightweight custom vector-graphic projection charts using visual glows, linear gradients, and layout overlays to compare current annual averages with targets and national standards without external charting overhead.
 
 ---
 
-## 🎨 Design System: Stitch Premium UI Overhaul
+## 🎨 Custom Neon Glassmorphism Design System
 
-EcoSentinel adopts the official high-fidelity **Stitch Design System** specs, shifting from standard generic UI colors to a premium neon-glassmorphic dark aesthetic:
+EcoSentinel adopts a custom high-fidelity design system, shifting from standard generic UI colors to a premium neon-glassmorphic dark aesthetic:
 
 * **Color Palette**:
   * **Midnight Blue** (`#0c1321`): The primary foundation background, creating an atmospheric, immersive visual style.
@@ -76,7 +76,7 @@ EcoSentinel adopts the official high-fidelity **Stitch Design System** specs, sh
 | --- | --- |
 | **Frontend** | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, React Leaflet, Recharts, Framer Motion |
 | **Backend** | FastAPI, SQLModel (Pydantic v2 + SQLAlchemy), Alembic Migrations, HTTPX client |
-| **AI & Predictive**| Google Gemini API, Prophet (Time Series Forecasting), OpenAI Whisper (Speech-to-Text) |
+| **Integrations**| Google Gemini API, Prophet (Time Series Forecasting), OpenAI Whisper (Speech-to-Text) |
 | **Data Telemetry** | NASA FIRMS API, OpenAQ API |
 | **Infrastructure** | PostgreSQL, Docker Compose, GitHub Actions CI, Pytest Suite |
 
@@ -171,10 +171,10 @@ npm run build
 ecosentinel/
 ├── backend/          # FastAPI server, Alembic migrations, SQLModel entities
 │   ├── routers/      # Air, Fires, Waste, Voice, Predictions, & Carbon routes
-│   ├── services/     # AI client wrappers and Prophet time-series models
+│   ├── services/     # API client wrappers and Prophet time-series models
 │   └── tests/        # Pytest integration and mock validation sweeps
 ├── frontend/         # Next.js 16 client, pages, static asset pipelines
-│   ├── app/          # App router setups & Stitch global styling variables
+│   ├── app/          # App router setups & global styling variables
 │   ├── components/   # Fully overhauled high-fidelity components
 │   └── lib/          # Fetch clients & environmental calculation utilities
 └── .github/          # Automated GitHub Actions CI workflow definitions
