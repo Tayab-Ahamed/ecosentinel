@@ -153,7 +153,7 @@ function AQITicker({ hotspots }: { hotspots: IndiaHotspot[] }) {
           <div className="animate-ticker flex gap-8">
             {items.map((s, i) => (
               <span
-                key={`${s.location_id}-${i}`}
+                key={`ticker-${s.location_id || "loc"}-${i}`}
                 className="shrink-0 whitespace-nowrap"
                 style={{ color: getPm25Color(s.pm25) }}
               >
@@ -262,7 +262,7 @@ export function EcoSentinelApp() {
         } | null = null;
         try {
           const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/stats/dashboard?lat=${location.lat}&lon=${location.lon}`
+            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8005"}/api/stats/dashboard?lat=${location.lat}&lon=${location.lon}`
           );
           if (res.ok) data = await res.json();
         } catch { /* fall back */ }
@@ -352,9 +352,9 @@ export function EcoSentinelApp() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.04 }}
-                    className={`flex w-full items-start gap-3 rounded-2xl px-4 py-3 text-left transition-all duration-200 ${
+                    className={`flex w-full items-start gap-3 rounded-2xl px-4 py-3 text-left transition-all duration-200 btn-premium ${
                       isActive
-                        ? "bg-sky-400/12 text-sky-200 shadow-[inset_0_1px_0_rgba(56,189,248,0.12)]"
+                        ? "sidebar-active"
                         : "text-slate-300 hover:bg-slate-900/60 hover:text-white"
                     }`}
                   >
@@ -379,9 +379,9 @@ export function EcoSentinelApp() {
               <button
                 type="button"
                 onClick={() => setDemoMode((v) => !v)}
-                className={`w-full rounded-2xl border px-4 py-3 text-left text-xs transition-colors ${
+                className={`w-full rounded-2xl border px-4 py-3 text-left text-xs transition-all duration-300 btn-premium ${
                   demoMode
-                    ? "border-amber-400/40 bg-amber-500/10 text-amber-100"
+                    ? "border-amber-400/40 bg-amber-500/10 text-amber-100 shadow-[0_0_20px_rgba(245,158,11,0.06)]"
                     : "border-border bg-slate-950/35 text-slate-400 hover:text-white"
                 }`}
               >
@@ -558,7 +558,7 @@ function HotspotsPanel({ hotspots }: { hotspots: IndiaHotspot[] }) {
       </div>
       <div className="space-y-3 p-5">
         {hotspots.length ? hotspots.slice(0, 8).map((spot, i) => (
-          <motion.div key={`${spot.location_id}-${spot.timestamp}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
+          <motion.div key={`hotspot-${spot.location_id || "loc"}-${spot.timestamp || "ts"}-${i}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
             className="grid gap-3 rounded-[1.1rem] border border-border bg-slate-950/30 p-4 md:grid-cols-[1fr_100px]"
           >
             <div>

@@ -150,6 +150,8 @@ export const DEMO_WASTE_HOTSPOTS: FeatureCollection<WasteHotspotProperties> = {
         severity: 4,
         reported_at: hoursAgo(6),
         image_url: null,
+        status: "active",
+        eco_points_awarded: 0,
       },
     },
     {
@@ -161,6 +163,8 @@ export const DEMO_WASTE_HOTSPOTS: FeatureCollection<WasteHotspotProperties> = {
         severity: 3,
         reported_at: hoursAgo(12),
         image_url: null,
+        status: "active",
+        eco_points_awarded: 0,
       },
     },
   ],

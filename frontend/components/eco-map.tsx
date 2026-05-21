@@ -28,12 +28,176 @@ interface EcoMapProps {
   demoMode?: boolean;
 }
 
-const wasteMarker = divIcon({
-  className: "waste-marker",
+const activeWasteMarker = divIcon({
+  className: "waste-marker-active",
   html: `<div style="width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:18px solid #f59e0b;filter:drop-shadow(0 8px 18px rgba(245,158,11,0.45));"></div>`,
   iconSize: [20, 18],
   iconAnchor: [10, 18],
 });
+
+const cleanedWasteMarker = divIcon({
+  className: "waste-marker-cleaned",
+  html: `<div style="width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:18px solid #10b981;filter:drop-shadow(0 8px 18px rgba(16,185,129,0.45));"></div>`,
+  iconSize: [20, 18],
+  iconAnchor: [10, 18],
+});
+
+interface WastePopupContentProps {
+  hotspot: WasteHotspotProperties;
+  onVerified: () => void;
+}
+
+function WastePopupContent({ hotspot, onVerified }: WastePopupContentProps) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<{
+    success: boolean;
+    message: string;
+    points_awarded?: number;
+    feedback?: string;
+  } | null>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    setUploading(true);
+    setError(null);
+    setResult(null);
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const res = await ecoApi.verifyCleanup(hotspot.id, formData);
+      setResult(res);
+      if (res.success) {
+        onVerified();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Verification request failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="w-[260px] p-1 font-sans text-slate-800">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+        <span className="text-sm font-semibold uppercase tracking-wider text-slate-900">
+          {hotspot.waste_type} Waste
+        </span>
+        <span
+          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
+            hotspot.status === "cleaned"
+              ? "bg-emerald-100 text-emerald-800"
+              : "bg-amber-100 text-amber-800"
+          }`}
+        >
+          {hotspot.status}
+        </span>
+      </div>
+
+      <div className="my-2 space-y-2">
+        {hotspot.status === "cleaned" ? (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-1">
+              {hotspot.image_base64 && (
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[9px] uppercase tracking-wider text-slate-400">Before</span>
+                  <img
+                    src={hotspot.image_base64}
+                    alt="Before"
+                    className="h-16 w-full rounded border border-slate-200 object-cover"
+                  />
+                </div>
+              )}
+              {hotspot.cleanup_image_base64 && (
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[9px] uppercase tracking-wider text-slate-400">After</span>
+                  <img
+                    src={hotspot.cleanup_image_base64}
+                    alt="After"
+                    className="h-16 w-full rounded border border-slate-200 object-cover"
+                  />
+                </div>
+              )}
+            </div>
+            <div className="rounded bg-emerald-50 p-2 text-xs text-emerald-800">
+              <p className="font-semibold text-emerald-950">🏆 AI Cleanup Verified</p>
+              <p className="mt-0.5 text-emerald-700">+{hotspot.eco_points_awarded} Eco Points Awarded!</p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {hotspot.image_base64 && (
+              <img
+                src={hotspot.image_base64}
+                alt="Reported Waste"
+                className="h-32 w-full rounded-lg border border-slate-200 object-cover"
+              />
+            )}
+            <div className="flex justify-between text-xs text-slate-600">
+              <span>Severity Level:</span>
+              <span className="font-semibold text-slate-900">{hotspot.severity}/5</span>
+            </div>
+            <div className="text-[10px] text-slate-400">
+              Reported: {new Date(hotspot.reported_at).toLocaleString()}
+            </div>
+
+            {!result?.success && (
+              <div className="mt-2 border-t border-slate-100 pt-2">
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+                  Clean this site and earn points!
+                </label>
+                <div className="relative flex items-center justify-center rounded-lg border border-dashed border-sky-300 bg-sky-50/50 hover:bg-sky-50 transition cursor-pointer p-2 text-center text-xs">
+                  {uploading ? (
+                    <span className="text-sky-700 flex items-center gap-1">
+                      <span className="animate-spin text-sky-600">&#9696;</span> Verifying...
+                    </span>
+                  ) : (
+                    <span className="text-sky-600 font-medium">Upload cleanup photo</span>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleUpload}
+                    disabled={uploading}
+                    className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {error && (
+          <div className="rounded bg-rose-50 p-1.5 text-xs text-rose-700 font-medium">
+            ❌ {error}
+          </div>
+        )}
+
+        {result && (
+          <div
+            className={`rounded p-2 text-xs ${
+              result.success
+                ? "bg-emerald-50 text-emerald-800"
+                : "bg-amber-50 text-amber-800"
+            }`}
+          >
+            <p className="font-semibold">{result.success ? "🎉 Cleaned!" : "⚠️ Verification Failed"}</p>
+            <p className="mt-0.5 text-xs">{result.message}</p>
+            {result.feedback && (
+              <p className="mt-1 text-[10px] italic text-slate-500">AI Feedback: &quot;{result.feedback}&quot;</p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 
 function RecenterMap({ lat, lon }: { lat: number; lon: number }) {
   const map = useMap();
@@ -280,20 +444,15 @@ export function EcoMap({ lat, lon, className, demoMode = false }: EcoMapProps) {
             {layers.waste &&
               wasteFeatures?.features.map((feature) => {
                 const [featureLon, featureLat] = feature.geometry.coordinates;
+                const isCleaned = feature.properties.status === "cleaned";
                 return (
                   <Marker
                     key={`${feature.properties.id}-${feature.properties.reported_at}`}
                     position={[featureLat, featureLon]}
-                    icon={wasteMarker}
+                    icon={isCleaned ? cleanedWasteMarker : activeWasteMarker}
                   >
                     <Popup>
-                      <div className="space-y-1">
-                        <p className="font-semibold text-slate-900">
-                          {feature.properties.waste_type.toUpperCase()}
-                        </p>
-                        <p>Severity: {feature.properties.severity}/5</p>
-                        <p>{formatLocalTime(feature.properties.reported_at)}</p>
-                      </div>
+                      <WastePopupContent hotspot={feature.properties} onVerified={fetchMapData} />
                     </Popup>
                   </Marker>
                 );

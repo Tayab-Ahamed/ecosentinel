@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8005";
 export const API_ROOT = `${API_BASE_URL.replace(/\/$/, "")}/api`;
 export const BENGALURU_LOCATION = {
   lat: 12.9716,
@@ -160,8 +160,38 @@ export interface WasteHotspotProperties {
   waste_type: WasteType;
   severity: number;
   image_url?: string | null;
+  image_base64?: string | null;
   reported_at: string;
+  status: "active" | "cleaned";
+  cleaned_at?: string | null;
+  cleanup_image_base64?: string | null;
+  eco_points_awarded: number;
 }
+
+export interface LeaderboardEntry {
+  username: string;
+  points: number;
+  cleaned_count: number;
+}
+
+export interface CarbonRecommendation {
+  title: string;
+  description: string;
+  impact: string;
+}
+
+export interface CarbonRecommendationsResponse {
+  tips: CarbonRecommendation[];
+}
+
+export interface CarbonAdvisorRequest {
+  transport: string;
+  transport_km: number;
+  food: string;
+  energy_kwh: number;
+  energy_source: string;
+}
+
 
 export interface WasteImpactInfo {
   decompose_years: number;
@@ -292,10 +322,42 @@ export const ecoApi = {
     lon: number;
     waste_type: WasteType;
     severity: number;
-    image_url: string | null;
-  }): Promise<void> {
-    await api.post("/api/waste/report-hotspot", payload);
+    image_url?: string | null;
+    image_base64?: string | null;
+  }): Promise<WasteHotspotProperties> {
+    const response = await api.post<WasteHotspotProperties>("/api/waste/report-hotspot", payload);
+    return response.data;
   },
+
+  async verifyCleanup(
+    hotspotId: number,
+    formData: FormData
+  ): Promise<{
+    success: boolean;
+    message: string;
+    points_awarded: number;
+    confidence: number;
+    feedback: string;
+  }> {
+    const response = await api.post<{
+      success: boolean;
+      message: string;
+      points_awarded: number;
+      confidence: number;
+      feedback: string;
+    }>(`/api/waste/verify-cleanup/${hotspotId}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+
+  async getLeaderboard(): Promise<LeaderboardEntry[]> {
+    const response = await api.get<LeaderboardEntry[]>("/api/waste/leaderboard");
+    return response.data;
+  },
+
 
   async queryText(question: string, lat: number, lon: number, city: string): Promise<VoiceResponse> {
     const response = await api.post<VoiceResponse>("/api/voice/query-text", {
@@ -334,6 +396,11 @@ export const ecoApi = {
     const response = await api.get<WeeklySummary[]>("/api/predict/weekly-summary", {
       params: { lat, lon },
     });
+    return response.data;
+  },
+
+  async getCarbonRecommendations(payload: CarbonAdvisorRequest): Promise<CarbonRecommendationsResponse> {
+    const response = await api.post<CarbonRecommendationsResponse>("/api/carbon/recommendations", payload);
     return response.data;
   },
 };

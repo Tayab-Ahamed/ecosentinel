@@ -19,6 +19,7 @@ from routers.prediction import router as prediction_router
 from routers import voice_agent as voice_agent_module
 from routers.voice_agent import router as voice_agent_router
 from routers.waste_vision import gemini_client, router as waste_vision_router
+from routers.carbon import router as carbon_router
 from services.prophet_model import ProphetModelService
 
 load_dotenv()
@@ -34,6 +35,7 @@ def _is_production() -> bool:
 
 DEFAULT_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "http://localhost:3005",
     "https://ecosentinel.vercel.app",
 ]
 
@@ -147,6 +149,7 @@ app.include_router(fire_data_router, prefix="/api")
 app.include_router(waste_vision_router, prefix="/api")
 app.include_router(voice_agent_router, prefix="/api")
 app.include_router(prediction_router, prefix="/api")
+app.include_router(carbon_router, prefix="/api")
 
 
 # ---------------------------------------------------------------------------
@@ -205,13 +208,20 @@ async def get_dashboard_stats(
 
 
 async def _get_waste_count() -> int:
-    """Return waste hotspot count from the in-memory store."""
+    """Return waste hotspot count from the database."""
     try:
-        from routers.waste_vision import _hotspots  # noqa: PLC0415
+        from database import AsyncSessionLocal  # noqa: PLC0415
+        from models.db import WasteHotspot  # noqa: PLC0415
+        from sqlalchemy import func, select  # noqa: PLC0415
 
-        return len(_hotspots)
-    except Exception:  # noqa: BLE001
+        async with AsyncSessionLocal() as session:
+            stmt = select(func.count(WasteHotspot.id))
+            result = await session.execute(stmt)
+            return result.scalar() or 0
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Failed to query waste count from database: %s", exc)
         return 0
+
 
 
 # ---------------------------------------------------------------------------

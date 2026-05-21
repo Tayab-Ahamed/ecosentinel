@@ -230,13 +230,19 @@ class OpenAQClient:
             if not readings or not readings.get("results"):
                 return None
             latest = readings["results"][0]
+            dt = latest.get("datetime")
+            ts = ""
+            if isinstance(dt, dict):
+                ts = dt.get("utc") or dt.get("local") or ""
+            elif dt:
+                ts = str(dt)
             return {
                 "location_id": int(location_id),
                 "location_name": location.get("name") or location.get("locality") or "Unknown",
                 "city": location.get("city") or "Unknown",
                 "pm25": float(latest.get("value", 0.0)),
                 "unit": latest.get("unit", "ug/m3"),
-                "timestamp": latest.get("datetime"),
+                "timestamp": ts,
             }
 
         results = await asyncio.gather(
