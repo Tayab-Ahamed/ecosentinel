@@ -3,6 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "EcoSentinel | Environmental Intelligence Platform",
+  manifest: "/manifest.json",
   description:
     "Full-stack environmental monitoring: real-time air quality, wildfire maps, AI waste analysis, voice assistant, and PM2.5 forecasting.",
   keywords: [

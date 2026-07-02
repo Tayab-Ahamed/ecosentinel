@@ -1,0 +1,16 @@
+{
+  "name": "EcoSentinel Environmental Intelligence",
+  "short_name": "EcoSentinel",
+  "description": "Enterprise-grade real-time air quality, wildfire, and community waste tracking platform.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c1321",
+  "theme_color": "#0c1321",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

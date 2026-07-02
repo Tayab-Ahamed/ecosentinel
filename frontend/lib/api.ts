@@ -264,9 +264,9 @@ export const ecoApi = {
     return response.data;
   },
 
-  async getHistoricalData(stationId: number, days = 7): Promise<HistoricalPoint[]> {
+  async getHistoricalData(stationId: number, days = 7, parameter = "pm25"): Promise<HistoricalPoint[]> {
     const response = await api.get<HistoricalPoint[]>(`/api/air/historical/${stationId}`, {
-      params: { days },
+      params: { days, parameter },
     });
     return response.data;
   },
@@ -378,9 +378,10 @@ export const ecoApi = {
     lat: number,
     lon: number,
     hours = 24,
+    parameter = "pm25",
   ): Promise<AirQualityForecast> {
     const response = await api.get<AirQualityForecast>("/api/predict/air-quality", {
-      params: { lat, lon, hours },
+      params: { lat, lon, hours, parameter },
     });
     return response.data;
   },

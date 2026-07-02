@@ -59,13 +59,16 @@ async def predict_air_quality(
     lat: float = Query(..., description="Latitude for nearest station selection."),
     lon: float = Query(..., description="Longitude for nearest station selection."),
     hours: int = Query(default=24, ge=1, le=168),
+    parameter: str = Query(default="pm25", description="Air quality parameter to forecast (e.g., pm25, no2, o3)."),
     aq_client: OpenAQClient = Depends(get_openaq_client),
     predictor: ProphetModelService = Depends(get_prophet_model),
 ) -> AirQualityForecast:
-    """Return hour-level PM2.5 forecast from nearest station model."""
+    """Return hour-level forecast from nearest station model."""
     try:
         station_id = await _nearest_station_id(aq_client, lat=lat, lon=lon)
-        return await predictor.predict_air_quality(station_id=station_id, hours_ahead=hours)
+        return await predictor.predict_air_quality(
+            station_id=station_id, hours_ahead=hours, parameter=parameter
+        )
     except HTTPException:
         raise
     except Exception as exc:

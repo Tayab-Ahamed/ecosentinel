@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ecoApi, CarbonRecommendation } from "@/lib/api";
+import { Forest3d } from "@/components/forest-3d";
 
 // IPCC 2023 emission factors (kg CO2e per unit)
 const FACTORS = {
@@ -553,6 +554,11 @@ export function CarbonCalculator() {
                 {accumulatedOffset.toFixed(2)} <span className="text-xs font-semibold text-secondary/60">kg</span>
               </p>
             </div>
+          </div>
+
+          {/* 3D Forest Visualizer */}
+          <div className="mt-5">
+            <Forest3d points={ecoPoints} offset={accumulatedOffset} />
           </div>
 
           <div className="mt-6 space-y-4">

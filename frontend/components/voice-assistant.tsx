@@ -54,47 +54,89 @@ function createAssistantMessage(response: VoiceResponse): ChatMessage {
   };
 }
 
-/** Real-time microphone amplitude visualizer bars */
-const IDLE_BARS = [0.3, 0.5, 0.7, 0.9, 0.7, 0.5, 0.3];
-
-function AudioVisualizer({ isActive, analyser }: {
+function VoiceWaveCanvas({ isActive, analyser, state }: {
   isActive: boolean;
   analyser: AnalyserNode | null;
+  state: VoiceState;
 }) {
-  const [bars, setBars] = useState(IDLE_BARS);
-  const frameRef = useRef<number>(0);
-  const displayBars = !isActive || !analyser ? IDLE_BARS : bars;
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const animationRef = useRef<number>(0);
 
   useEffect(() => {
-    if (!isActive || !analyser) {
-      return;
-    }
-    const data = new Uint8Array(analyser.frequencyBinCount);
-    const tick = () => {
-      analyser.getByteFrequencyData(data);
-      const step = Math.floor(data.length / 7);
-      setBars(Array.from({ length: 7 }, (_, i) => Math.max(0.15, (data[i * step] ?? 0) / 255)));
-      frameRef.current = requestAnimationFrame(tick);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let width = canvas.width = 160;
+    let height = canvas.height = 160;
+
+    const bufferLength = analyser ? analyser.frequencyBinCount : 64;
+    const dataArray = new Uint8Array(bufferLength);
+
+    const draw = () => {
+      animationRef.current = requestAnimationFrame(draw);
+      ctx.clearRect(0, 0, width, height);
+
+      const centerX = width / 2;
+      const centerY = height / 2;
+      let radius = 54;
+
+      if (analyser && isActive) {
+        analyser.getByteFrequencyData(dataArray);
+      }
+
+      // Draw glowing background rings
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius - 4, 0, Math.PI * 2);
+      ctx.strokeStyle = state === "recording" ? "rgba(251, 113, 133, 0.1)" : "rgba(76, 215, 246, 0.1)";
+      ctx.lineWidth = 6;
+      ctx.stroke();
+
+      // Outer wave ring
+      ctx.beginPath();
+      const points = 80;
+      for (let i = 0; i < points; i++) {
+        const angle = (i / points) * Math.PI * 2;
+        const dataIdx = Math.floor((i / points) * bufferLength);
+        let amplitude = 0;
+        if (analyser && isActive) {
+          amplitude = (dataArray[dataIdx] ?? 0) / 255 * 24;
+        } else if (state === "speaking") {
+          amplitude = (Math.sin(Date.now() * 0.008 + i * 0.25) * 0.5 + 0.5) * 12;
+        } else {
+          amplitude = (Math.sin(Date.now() * 0.003 + i * 0.1) * 0.5 + 0.5) * 2;
+        }
+
+        const offsetRadius = radius + amplitude;
+        const x = centerX + offsetRadius * Math.cos(angle);
+        const y = centerY + offsetRadius * Math.sin(angle);
+
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+      ctx.closePath();
+      ctx.strokeStyle = state === "recording" ? "rgba(251, 113, 133, 0.8)" : "rgba(76, 215, 246, 0.8)";
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = state === "recording" ? "#fb7185" : "#4cd7f6";
+      ctx.stroke();
+      ctx.shadowBlur = 0;
     };
-    frameRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameRef.current);
-  }, [isActive, analyser]);
 
-  const heights = [28, 44, 56, 68, 56, 44, 28];
+    draw();
 
-  return (
-    <div className="flex items-end gap-1.5">
-      {displayBars.map((amplitude, i) => (
-        <motion.span
-          key={i}
-          className="w-2.5 rounded-full"
-          style={{ backgroundColor: isActive ? "#4cd7f6" : "#94a3b8" }}
-          animate={{ height: isActive ? heights[i]! * amplitude : heights[i]! * 0.3 }}
-          transition={{ duration: 0.06 }}
-        />
-      ))}
-    </div>
-  );
+    return () => {
+      cancelAnimationFrame(animationRef.current);
+    };
+  }, [isActive, analyser, state]);
+
+  return <canvas ref={canvasRef} className="h-40 w-40 absolute pointer-events-none z-0" />;
 }
 
 /** Typing indicator with 3 animated dots */
@@ -283,19 +325,23 @@ export function VoiceAssistant({ initialLat, initialLon, city = BENGALURU_LOCATI
             id="eco-voice-mic-button"
             onClick={() => void toggleRecording()}
             disabled={voiceState === "processing"}
-            className="relative flex h-44 w-44 items-center justify-center rounded-full border text-white transition"
-            style={{ borderColor: voiceState === "recording" ? "rgba(251,113,133,0.5)" : "rgba(76,215,246,0.25)", background: voiceState === "recording" ? "rgba(251,113,133,0.07)" : "rgba(15,29,49,0.5)" }}
-            animate={voiceState === "recording" ? { boxShadow: ["0 0 0 0 rgba(251,113,133,0.3)", "0 0 0 28px rgba(251,113,133,0)", "0 0 0 0 rgba(251,113,133,0)"] } : { scale: [1, 1.025, 1] }}
+            className="relative flex h-44 w-44 items-center justify-center rounded-full border text-white transition cursor-pointer"
+            style={{ borderColor: voiceState === "recording" ? "rgba(251,113,133,0.4)" : "rgba(76,215,246,0.2)", background: voiceState === "recording" ? "rgba(251,113,133,0.05)" : "rgba(15,29,49,0.45)" }}
+            animate={voiceState === "recording" ? { scale: 1.02 } : { scale: [1, 1.015, 1] }}
             transition={voiceState === "recording" ? { repeat: Infinity, duration: 1.4 } : { repeat: Infinity, duration: 3 }}
           >
-            {voiceState === "speaking" ? (
-              <AudioVisualizer isActive={true} analyser={null} />
-            ) : voiceState === "recording" ? (
-              <AudioVisualizer isActive={true} analyser={analyserRef.current} />
-            ) : voiceState === "processing" ? (
-              <motion.div className="h-12 w-12 rounded-full border-2 border-secondary/25 border-t-secondary" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }} />
+            {voiceState !== "processing" && (
+              <VoiceWaveCanvas
+                isActive={voiceState === "recording" || voiceState === "speaking"}
+                analyser={analyserRef.current}
+                state={voiceState}
+              />
+            )}
+
+            {voiceState === "processing" ? (
+              <motion.div className="h-12 w-12 rounded-full border-2 border-secondary/25 border-t-secondary z-10" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }} />
             ) : (
-              <MicIcon className="h-16 w-16 text-secondary" />
+              <MicIcon className={`h-16 w-16 z-10 transition-colors duration-300 ${voiceState === "recording" ? "text-rose-400" : "text-secondary"}`} />
             )}
           </motion.button>
 

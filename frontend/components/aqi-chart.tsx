@@ -73,6 +73,7 @@ export function AQIChart({
   const [chartPoints, setChartPoints] = useState<ChartPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
+  const [pollutant, setPollutant] = useState<"pm25" | "co2" | "no2">("pm25");
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -117,8 +118,8 @@ export function AQIChart({
         if (!stationId) throw new Error("No nearby station available for charting.");
 
         const [history, forecast, windows, weekly] = await Promise.all([
-          ecoApi.getHistoricalData(stationId, 7),
-          ecoApi.getAirQualityForecast(lat, lon, 24),
+          ecoApi.getHistoricalData(stationId, 7, pollutant),
+          ecoApi.getAirQualityForecast(lat, lon, 24, pollutant),
           ecoApi.getSafeOutdoorTimes(lat, lon),
           ecoApi.getWeeklySummary(lat, lon),
         ]);
@@ -163,7 +164,7 @@ export function AQIChart({
     return () => {
       cancelled = true;
     };
-  }, [lat, lon, demoMode]);
+  }, [lat, lon, demoMode, pollutant]);
 
   const latestHistorical = historical.at(-1)?.value ?? 0;
   const nextForecast = chartPoints.find((p) => p.forecast !== undefined)?.forecast ?? 0;
@@ -183,7 +184,23 @@ export function AQIChart({
             <p className="mt-1 text-sm text-slate-400">{summaryText}</p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="rounded-full border border-border bg-slate-950/30 px-3 py-1.5 text-sm text-slate-100">
+            <div className="flex items-center gap-1 rounded-full border border-border bg-slate-950/60 p-1 text-[11px]">
+              {(["pm25", "co2", "no2"] as const).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPollutant(p)}
+                  className={`rounded-full px-3 py-1 font-semibold transition-all cursor-pointer ${
+                    pollutant === p
+                      ? "bg-secondary text-slate-950 shadow-md shadow-secondary/15"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {p === "pm25" ? "PM2.5" : p === "co2" ? "CO₂" : "NO₂"}
+                </button>
+              ))}
+            </div>
+            <div className="rounded-full border border-border bg-slate-950/30 px-3 py-1.5 text-xs text-slate-100">
               Safe windows: {safeTimes.length}
             </div>
             <ExportButton chartRef={chartContainerRef} />
@@ -222,20 +239,44 @@ export function AQIChart({
                   contentStyle={{ background: "#0d1928", borderColor: "rgba(148,163,184,0.15)", borderRadius: "14px", color: "#e2ecff", fontSize: 12 }}
                   formatter={(value) => {
                     const num = Number(Array.isArray(value) ? value[0] : value ?? 0);
-                    return [`${num.toFixed(1)} µg/m³`, getPm25Category(num)];
+                    return [`${num.toFixed(1)} ${pollutant === "co2" ? "ppm" : "µg/m³"}`, getPm25Category(num)];
                   }}
                 />
                 <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, color: "#9fb2d4" }} />
-                {/* AQI reference lines with labels */}
-                <ReferenceLine y={50} stroke="#4ade80" strokeDasharray="5 4" strokeOpacity={0.7}>
-                  <Label value="Good" position="insideRight" fill="#4ade80" fontSize={10} />
-                </ReferenceLine>
-                <ReferenceLine y={100} stroke="#fcd34d" strokeDasharray="5 4" strokeOpacity={0.7}>
-                  <Label value="Moderate" position="insideRight" fill="#fcd34d" fontSize={10} />
-                </ReferenceLine>
-                <ReferenceLine y={200} stroke="#fb7185" strokeDasharray="5 4" strokeOpacity={0.7}>
-                  <Label value="Poor" position="insideRight" fill="#fb7185" fontSize={10} />
-                </ReferenceLine>
+                {/* Dynamic AQI reference lines with labels */}
+                {pollutant === "pm25" && (
+                  <>
+                    <ReferenceLine y={50} stroke="#4ade80" strokeDasharray="5 4" strokeOpacity={0.7}>
+                      <Label value="Good" position="insideRight" fill="#4ade80" fontSize={10} />
+                    </ReferenceLine>
+                    <ReferenceLine y={100} stroke="#fcd34d" strokeDasharray="5 4" strokeOpacity={0.7}>
+                      <Label value="Moderate" position="insideRight" fill="#fcd34d" fontSize={10} />
+                    </ReferenceLine>
+                    <ReferenceLine y={200} stroke="#fb7185" strokeDasharray="5 4" strokeOpacity={0.7}>
+                      <Label value="Poor" position="insideRight" fill="#fb7185" fontSize={10} />
+                    </ReferenceLine>
+                  </>
+                )}
+                {pollutant === "no2" && (
+                  <>
+                    <ReferenceLine y={40} stroke="#4ade80" strokeDasharray="5 4" strokeOpacity={0.7}>
+                      <Label value="Good" position="insideRight" fill="#4ade80" fontSize={10} />
+                    </ReferenceLine>
+                    <ReferenceLine y={80} stroke="#fcd34d" strokeDasharray="5 4" strokeOpacity={0.7}>
+                      <Label value="Moderate" position="insideRight" fill="#fcd34d" fontSize={10} />
+                    </ReferenceLine>
+                  </>
+                )}
+                {pollutant === "co2" && (
+                  <>
+                    <ReferenceLine y={450} stroke="#4ade80" strokeDasharray="5 4" strokeOpacity={0.7}>
+                      <Label value="Fresh" position="insideRight" fill="#4ade80" fontSize={10} />
+                    </ReferenceLine>
+                    <ReferenceLine y={700} stroke="#fcd34d" strokeDasharray="5 4" strokeOpacity={0.7}>
+                      <Label value="Moderate" position="insideRight" fill="#fcd34d" fontSize={10} />
+                    </ReferenceLine>
+                  </>
+                )}
                 <Area type="monotone" dataKey="historical" name="Historical" stroke="#4cd7f6" strokeWidth={2.5} fill="url(#historicalFill)" dot={false} />
                 <Area type="monotone" dataKey="forecast" name="Forecast" stroke="#fcd34d" strokeWidth={2} strokeDasharray="7 4" fill="url(#forecastFill)" dot={false} />
               </ComposedChart>

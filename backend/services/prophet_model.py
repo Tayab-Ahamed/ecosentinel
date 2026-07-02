@@ -43,10 +43,10 @@ class ProphetModelService:
             return "Avoid outdoor activity"
         return "Stay indoors - hazardous"
 
-    async def _fetch_pm25_history(self, station_id: int) -> list[dict[str, Any]]:
-        """Fetch 30 days of PM2.5 history from OpenAQ client."""
+    async def _fetch_pollutant_history(self, station_id: int, parameter: str = "pm25") -> list[dict[str, Any]]:
+        """Fetch 30 days of historical data for a specific pollutant from OpenAQ client."""
         return await self.openaq_client.get_historical_data(
-            station_id=station_id, parameter="pm25", days=30
+            station_id=station_id, parameter=parameter, days=30
         )
 
     @staticmethod
@@ -95,17 +95,17 @@ class ProphetModelService:
         ]
 
     async def predict_air_quality(
-        self, station_id: int, hours_ahead: int = 24
+        self, station_id: int, hours_ahead: int = 24, parameter: str = "pm25"
     ) -> AirQualityForecast:
-        """Predict next PM2.5 values in 1-hour intervals."""
-        cache_key = f"{station_id}:{hours_ahead}"
+        """Predict next values in 1-hour intervals for a specific parameter."""
+        cache_key = f"{station_id}:{hours_ahead}:{parameter}"
         now = datetime.now(UTC)
         cached = self._cache.get(cache_key)
         if cached and cached[0] > now:
             return cached[1]
 
         try:
-            history = await self._fetch_pm25_history(station_id=station_id)
+            history = await self._fetch_pollutant_history(station_id=station_id, parameter=parameter)
             frame = self._to_dataframe(history)
             if frame.empty:
                 forecast = AirQualityForecast(

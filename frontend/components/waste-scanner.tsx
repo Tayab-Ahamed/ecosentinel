@@ -45,6 +45,41 @@ async function resolvePosition() {
   });
 }
 
+function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
+  const cardRef = useRef<HTMLDivElement | null>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = cardRef.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const xc = rect.width / 2;
+    const yc = rect.height / 2;
+    const rotateX = -(y - yc) / 22;
+    const rotateY = (x - xc) / 22;
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.01, 1.01)`;
+  };
+
+  const handleMouseLeave = () => {
+    const card = cardRef.current;
+    if (!card) return;
+    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+  };
+
+  return (
+    <div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={`transition-all duration-200 ease-out ${className || ""}`}
+      style={{ transformStyle: "preserve-3d" }}
+    >
+      {children}
+    </div>
+  );
+}
+
 const WASTE_EMOJI: Record<string, string> = {
   plastic: "🧴", paper: "📄", glass: "🫙", metal: "🔩",
   ewaste: "💻", medical: "💊", construction: "🧱", organic: "🌿",
@@ -278,7 +313,16 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
                     <video ref={videoRef} muted playsInline className="h-[380px] w-full bg-slate-950 object-cover" />
                   )}
 
-                  {/* Scan grid overlay */}
+                  {/* High Tech Diagnostics HUD Overlay */}
+                  {!error && (
+                    <div className="absolute top-4 right-4 z-10 flex flex-col items-end text-[8px] font-mono tracking-widest text-secondary/60 text-right pointer-events-none select-none">
+                      <span>SYS_SCANNER: {previewUrl ? "ARCHIVE_CAP" : "LIVE_STREAM"}</span>
+                      <span>COORD_LOCK: {position.lat.toFixed(3)}, {position.lon.toFixed(3)}</span>
+                      <span>ENGINE: GEMINI_VISION_1.5</span>
+                    </div>
+                  )}
+
+                  {/* Scan grid overlay (Live Camera Mode) */}
                   {!previewUrl && !error && (
                     <div className="pointer-events-none absolute inset-0">
                       {/* Corner brackets */}
@@ -287,19 +331,62 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
                       ))}
                       {/* Animated scan line */}
                       <div className="absolute left-4 right-4 h-0.5 bg-gradient-to-r from-transparent via-secondary/80 to-transparent animate-scan-line" />
+
+                      {/* Pulsing center target reticle */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="h-10 w-10 rounded-full border border-dashed border-secondary/40 animate-ping" />
+                        <div className="h-1.5 w-1.5 rounded-full bg-secondary/80" />
+                      </div>
+
                       <div className="absolute bottom-5 left-0 right-0 text-center">
-                        <span className="rounded-full bg-slate-950/70 px-4 py-2 text-xs text-slate-200 backdrop-blur">
+                        <span className="rounded-full bg-slate-950/70 px-4 py-2 text-xs text-slate-200 backdrop-blur border border-border">
                           Point camera at waste or upload an image
                         </span>
                       </div>
                     </div>
                   )}
 
-                  {/* Analyzing overlay */}
+                  {/* Analyzing Overlay (Sweeping Matrix laser) */}
                   {isAnalyzing && previewUrl && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-slate-950/75 backdrop-blur-sm">
-                      <motion.div className="h-12 w-12 rounded-full border-2 border-secondary/30 border-t-secondary" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }} />
-                      <p className="text-sm font-medium text-white">Gemini Vision analyzing…</p>
+                    <div className="absolute inset-0 z-10 pointer-events-none">
+                      {/* Glowing sweeping line */}
+                      <div className="absolute top-0 bottom-0 left-0 right-0 overflow-hidden">
+                        <motion.div
+                          className="w-full h-1.5 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_15px_#4cd7f6]"
+                          animate={{ y: [0, 380, 0] }}
+                          transition={{ repeat: Infinity, duration: 2.0, ease: "easeInOut" }}
+                        />
+                      </div>
+                      {/* High tech analyzing text */}
+                      <div className="absolute top-4 left-4 flex flex-col text-[10px] font-mono tracking-widest text-cyan-400 bg-slate-950/80 p-3 rounded-2xl border border-cyan-400/25 backdrop-blur-md">
+                        <span className="flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
+                          SPECTRAL SCAN ACTIVE
+                        </span>
+                        <span className="text-[8px] text-slate-400 mt-1">GEMINI PRO CLASSIFICATION LAYER...</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AR Bounding Box Target (Once classified) */}
+                  {!isAnalyzing && classification && previewUrl && (
+                    <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="relative h-44 w-44 border border-dashed border-emerald-400/60 rounded-xl"
+                      >
+                        {/* Corner brackets */}
+                        <div className="absolute -top-1.5 -left-1.5 h-4 w-4 border-t-2 border-l-2 border-emerald-400 rounded-sm" />
+                        <div className="absolute -top-1.5 -right-1.5 h-4 w-4 border-t-2 border-r-2 border-emerald-400 rounded-sm" />
+                        <div className="absolute -bottom-1.5 -left-1.5 h-4 w-4 border-b-2 border-l-2 border-emerald-400 rounded-sm" />
+                        <div className="absolute -bottom-1.5 -right-1.5 h-4 w-4 border-b-2 border-r-2 border-emerald-400 rounded-sm" />
+
+                        {/* Floating AR Tag */}
+                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 rounded-[0.5rem] bg-emerald-400 text-slate-950 text-[10px] font-mono font-bold tracking-widest px-2.5 py-1 shadow-lg shadow-emerald-400/20 whitespace-nowrap">
+                          {classification.waste_type.toUpperCase()} LOCKED
+                        </div>
+                      </motion.div>
                     </div>
                   )}
                 </div>
@@ -342,117 +429,119 @@ export function WasteScanner({ initialLat, initialLon }: WasteScannerProps) {
             </div>
 
             {/* Results side */}
-            <div className="panel subtle-ring overflow-hidden">
-              <div className="border-b border-border px-5 py-4">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-slate-400">Classification Result</p>
-                <h2 className="mt-1.5 text-xl font-semibold text-white">Environmental impact & disposal guide</h2>
-              </div>
+            <TiltCard className="h-full">
+              <div className="panel subtle-ring overflow-hidden h-full">
+                <div className="border-b border-border px-5 py-4">
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-slate-400">Classification Result</p>
+                  <h2 className="mt-1.5 text-xl font-semibold text-white">Environmental impact & disposal guide</h2>
+                </div>
 
-              <div className="space-y-4 p-5">
-                <AnimatePresence mode="wait">
-                  {isAnalyzing ? (
-                    <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                      className="flex min-h-[420px] flex-col items-center justify-center gap-6 rounded-[1.2rem] border border-border bg-slate-950/35 text-center px-6">
-                      <motion.div className="h-16 w-16 rounded-full border-2 border-secondary/25 border-t-secondary" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.1, ease: "linear" }} />
-                      <div>
-                        <p className="text-lg font-semibold text-white">Analyzing with AI…</p>
-                        <p className="mt-2 text-sm text-slate-400 leading-6">Classifying waste, estimating impact, and checking local PM2.5.</p>
-                      </div>
-                    </motion.div>
-                  ) : classification ? (
-                    <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                      {/* Type badge */}
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-                        className="rounded-[1.2rem] border border-border bg-slate-950/35 p-4">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Waste type</p>
-                            <h3 className="mt-2 flex items-center gap-2 text-3xl font-bold uppercase" style={{ color: getImpactTone(classification.environmental_impact_score) }}>
-                              {WASTE_EMOJI[classification.waste_type] ?? "♻️"}
-                              {classification.waste_type}
-                            </h3>
-                          </div>
-                          <span className="rounded-full border border-border px-3 py-1.5 text-xs text-slate-200">
-                            {(classification.confidence * 100).toFixed(0)}% confidence
-                          </span>
-                        </div>
-                        <div className="mt-4 h-2 rounded-full bg-slate-800">
-                          <motion.div className="h-2 rounded-full" initial={{ width: 0 }} animate={{ width: `${clamp(classification.confidence * 100, 5, 100)}%` }} transition={{ duration: 0.7 }} style={{ backgroundColor: getImpactTone(classification.environmental_impact_score) }} />
+                <div className="space-y-4 p-5">
+                  <AnimatePresence mode="wait">
+                    {isAnalyzing ? (
+                      <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="flex min-h-[420px] flex-col items-center justify-center gap-6 rounded-[1.2rem] border border-border bg-slate-950/35 text-center px-6">
+                        <motion.div className="h-16 w-16 rounded-full border-2 border-secondary/25 border-t-secondary" animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.1, ease: "linear" }} />
+                        <div>
+                          <p className="text-lg font-semibold text-white">Analyzing with AI…</p>
+                          <p className="mt-2 text-sm text-slate-400 leading-6">Classifying waste, estimating impact, and checking local PM2.5.</p>
                         </div>
                       </motion.div>
-
-                      {/* Impact + decomposition */}
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                        className="grid gap-4 md:grid-cols-2">
-                        <div className="rounded-[1.2rem] border border-border bg-slate-950/35 p-4">
-                          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Impact score</p>
-                          <div className="mt-5 flex items-center gap-4">
-                            <div className="relative h-24 w-24 shrink-0">
-                              <svg viewBox="0 0 120 120" className="h-24 w-24">
-                                <path d="M20 88a40 40 0 0 1 80 0" stroke="rgba(148,163,184,0.12)" strokeWidth="14" fill="none" strokeLinecap="round" />
-                                <motion.path d="M20 88a40 40 0 0 1 80 0" stroke={getImpactTone(classification.environmental_impact_score)} strokeWidth="14" fill="none" strokeLinecap="round"
-                                  initial={{ strokeDashoffset: 126, strokeDasharray: "126" }}
-                                  animate={{ strokeDashoffset: 126 - classification.environmental_impact_score * 12.6 }}
-                                  transition={{ duration: 0.9, ease: "easeOut" }}
-                                />
-                              </svg>
-                              <div className="absolute inset-x-0 bottom-2 text-center text-2xl font-bold text-white">
-                                {classification.environmental_impact_score.toFixed(1)}
-                              </div>
+                    ) : classification ? (
+                      <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                        {/* Type badge */}
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+                          className="rounded-[1.2rem] border border-border bg-slate-950/35 p-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Waste type</p>
+                              <h3 className="mt-2 flex items-center gap-2 text-3xl font-bold uppercase" style={{ color: getImpactTone(classification.environmental_impact_score) }}>
+                                {WASTE_EMOJI[classification.waste_type] ?? "♻️"}
+                                {classification.waste_type}
+                              </h3>
                             </div>
-                            <p className="text-xs leading-6 text-slate-400">Higher = more harmful when dumped, burned, or mixed with general waste.</p>
+                            <span className="rounded-full border border-border px-3 py-1.5 text-xs text-slate-200">
+                              {(classification.confidence * 100).toFixed(0)}% confidence
+                            </span>
                           </div>
-                        </div>
-
-                        <div className="rounded-[1.2rem] border border-border bg-slate-950/35 p-4">
-                          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Decomposition</p>
-                          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mt-4 text-3xl font-bold text-white">
-                            {decompositionYears || "—"} yrs
-                          </motion.p>
                           <div className="mt-4 h-2 rounded-full bg-slate-800">
-                            <motion.div className="h-2 rounded-full" initial={{ width: 0 }} animate={{ width: `${decompositionWidth}%` }} transition={{ duration: 0.7, delay: 0.2 }} style={{ backgroundColor: getImpactTone(classification.environmental_impact_score) }} />
+                            <motion.div className="h-2 rounded-full" initial={{ width: 0 }} animate={{ width: `${clamp(classification.confidence * 100, 5, 100)}%` }} transition={{ duration: 0.7 }} style={{ backgroundColor: getImpactTone(classification.environmental_impact_score) }} />
                           </div>
+                        </motion.div>
+
+                        {/* Impact + decomposition */}
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                          className="grid gap-4 md:grid-cols-2">
+                          <div className="rounded-[1.2rem] border border-border bg-slate-950/35 p-4">
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Impact score</p>
+                            <div className="mt-5 flex items-center gap-4">
+                              <div className="relative h-24 w-24 shrink-0">
+                                <svg viewBox="0 0 120 120" className="h-24 w-24">
+                                  <path d="M20 88a40 40 0 0 1 80 0" stroke="rgba(148,163,184,0.12)" strokeWidth="14" fill="none" strokeLinecap="round" />
+                                  <motion.path d="M20 88a40 40 0 0 1 80 0" stroke={getImpactTone(classification.environmental_impact_score)} strokeWidth="14" fill="none" strokeLinecap="round"
+                                    initial={{ strokeDashoffset: 126, strokeDasharray: "126" }}
+                                    animate={{ strokeDashoffset: 126 - classification.environmental_impact_score * 12.6 }}
+                                    transition={{ duration: 0.9, ease: "easeOut" }}
+                                  />
+                                </svg>
+                                <div className="absolute inset-x-0 bottom-2 text-center text-2xl font-bold text-white">
+                                  {classification.environmental_impact_score.toFixed(1)}
+                                </div>
+                              </div>
+                              <p className="text-xs leading-6 text-slate-400">Higher = more harmful when dumped, burned, or mixed with general waste.</p>
+                            </div>
+                          </div>
+
+                          <div className="rounded-[1.2rem] border border-border bg-slate-950/35 p-4">
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Decomposition</p>
+                            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="mt-4 text-3xl font-bold text-white">
+                              {decompositionYears || "—"} yrs
+                            </motion.p>
+                            <div className="mt-4 h-2 rounded-full bg-slate-800">
+                              <motion.div className="h-2 rounded-full" initial={{ width: 0 }} animate={{ width: `${decompositionWidth}%` }} transition={{ duration: 0.7, delay: 0.2 }} style={{ backgroundColor: getImpactTone(classification.environmental_impact_score) }} />
+                            </div>
+                          </div>
+                        </motion.div>
+
+                        {/* AQ context */}
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+                          className="rounded-[1.2rem] border border-border bg-slate-950/35 p-4">
+                          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Local air-quality context</p>
+                          <p className="mt-3 text-sm leading-7 text-slate-300">{classification.local_air_quality_correlation}</p>
+                        </motion.div>
+
+                        {/* Disposal */}
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                          className="rounded-[1.2rem] border border-border bg-slate-950/35 p-4">
+                          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Disposal guide</p>
+                          <p className="mt-3 text-sm leading-7 text-slate-300">{classification.disposal_recommendation}</p>
+                        </motion.div>
+
+                        <motion.button initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+                          type="button" onClick={() => void handleReportHotspot()} disabled={hotspotReported}
+                          className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition active:scale-95 ${hotspotReported ? "bg-emerald-400/20 text-emerald-300 cursor-default" : "bg-amber-400 text-slate-950 hover:bg-amber-300"}`}>
+                          <WasteIcon className="h-4 w-4" />
+                          {hotspotReported ? "Hotspot reported ✓" : "Report as hotspot"}
+                        </motion.button>
+                      </motion.div>
+                    ) : (
+                      <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                        className="flex min-h-[420px] flex-col items-center justify-center gap-5 rounded-[1.2rem] border border-dashed border-border bg-slate-950/20 px-6 text-center">
+                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-900/60 text-secondary">
+                          <WasteIcon className="h-9 w-9" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-semibold text-white">Scanner ready</h3>
+                          <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">
+                            Take a photo or upload an image to generate waste class, impact score, decomposition timeline, and disposal recommendation.
+                          </p>
                         </div>
                       </motion.div>
-
-                      {/* AQ context */}
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-                        className="rounded-[1.2rem] border border-border bg-slate-950/35 p-4">
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Local air-quality context</p>
-                        <p className="mt-3 text-sm leading-7 text-slate-300">{classification.local_air_quality_correlation}</p>
-                      </motion.div>
-
-                      {/* Disposal */}
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                        className="rounded-[1.2rem] border border-border bg-slate-950/35 p-4">
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Disposal guide</p>
-                        <p className="mt-3 text-sm leading-7 text-slate-300">{classification.disposal_recommendation}</p>
-                      </motion.div>
-
-                      <motion.button initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-                        type="button" onClick={() => void handleReportHotspot()} disabled={hotspotReported}
-                        className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition active:scale-95 ${hotspotReported ? "bg-emerald-400/20 text-emerald-300 cursor-default" : "bg-amber-400 text-slate-950 hover:bg-amber-300"}`}>
-                        <WasteIcon className="h-4 w-4" />
-                        {hotspotReported ? "Hotspot reported ✓" : "Report as hotspot"}
-                      </motion.button>
-                    </motion.div>
-                  ) : (
-                    <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                      className="flex min-h-[420px] flex-col items-center justify-center gap-5 rounded-[1.2rem] border border-dashed border-border bg-slate-950/20 px-6 text-center">
-                      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-900/60 text-secondary">
-                        <WasteIcon className="h-9 w-9" />
-                      </div>
-                      <div>
-                        <h3 className="text-base font-semibold text-white">Scanner ready</h3>
-                        <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">
-                          Take a photo or upload an image to generate waste class, impact score, decomposition timeline, and disposal recommendation.
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
-            </div>
+            </TiltCard>
           </motion.div>
         ) : (
           <motion.div

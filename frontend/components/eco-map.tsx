@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { CircleMarker, MapContainer, Marker, Popup, TileLayer, useMap, FeatureGroup } from "react-leaflet";
 import { divIcon } from "leaflet";
 
 import type {
@@ -221,6 +221,7 @@ export function EcoMap({ lat, lon, className, demoMode = false }: EcoMapProps) {
     air: true,
     fire: true,
     waste: true,
+    smoke: true,
   });
 
   const fetchMapData = useCallback(async () => {
@@ -333,6 +334,11 @@ export function EcoMap({ lat, lon, className, demoMode = false }: EcoMapProps) {
                 label: "Waste hotspots",
                 tint: "#f59e0b",
               },
+              {
+                key: "smoke" as const,
+                label: "Smoke Plumes",
+                tint: "#eab308",
+              },
             ].map((item) => (
               <label
                 key={item.key}
@@ -411,6 +417,49 @@ export function EcoMap({ lat, lon, className, demoMode = false }: EcoMapProps) {
                   </Popup>
                 </CircleMarker>
               ))}
+
+            {layers.smoke &&
+              layers.fire &&
+              fireFeatures?.features.map((feature) => {
+                const [featureLon, featureLat] = feature.geometry.coordinates;
+                const baseRadius = Math.max(6, Math.min(16, feature.properties.frp / 8));
+                const windDx = 0.012;
+                const windDy = 0.012;
+                return (
+                  <FeatureGroup key={`smoke-plume-${featureLon}-${featureLat}-${feature.properties.timestamp}`}>
+                    <CircleMarker
+                      center={[featureLat + windDy * 0.4, featureLon + windDx * 0.4]}
+                      radius={baseRadius * 2.0}
+                      pathOptions={{
+                        color: "rgba(234, 179, 8, 0.22)",
+                        fillColor: "rgba(234, 179, 8, 0.22)",
+                        fillOpacity: 0.22,
+                        weight: 0,
+                      }}
+                    />
+                    <CircleMarker
+                      center={[featureLat + windDy * 1.0, featureLon + windDx * 1.0]}
+                      radius={baseRadius * 3.8}
+                      pathOptions={{
+                        color: "rgba(234, 179, 8, 0.12)",
+                        fillColor: "rgba(234, 179, 8, 0.12)",
+                        fillOpacity: 0.12,
+                        weight: 0,
+                      }}
+                    />
+                    <CircleMarker
+                      center={[featureLat + windDy * 1.8, featureLon + windDx * 1.8]}
+                      radius={baseRadius * 6.0}
+                      pathOptions={{
+                        color: "rgba(234, 179, 8, 0.05)",
+                        fillColor: "rgba(234, 179, 8, 0.05)",
+                        fillOpacity: 0.05,
+                        weight: 0,
+                      }}
+                    />
+                  </FeatureGroup>
+                );
+              })}
 
             {layers.fire &&
               fireFeatures?.features.map((feature) => {

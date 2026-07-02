@@ -19,6 +19,7 @@ import {
 import { VoiceAssistant } from "@/components/voice-assistant";
 import { WasteScanner } from "@/components/waste-scanner";
 import { CarbonCalculator } from "@/components/carbon-calculator";
+import { Globe3d } from "@/components/globe-3d";
 import type { AirQualityReading, IndiaHotspot, RealtimeAlert } from "@/lib/api";
 import { BENGALURU_LOCATION, ecoApi } from "@/lib/api";
 import {
@@ -234,7 +235,29 @@ export function EcoSentinelApp() {
   const [wasteCount, setWasteCount] = useState(0);
   const [demoMode, setDemoMode] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [dashboardViz, setDashboardViz] = useState<"globe" | "map">("globe");
+  const [pushEnabled, setPushEnabled] = useState(false);
   const shownAlertsRef = useRef(new Set<string>());
+
+  const togglePushAlerts = async () => {
+    if (pushEnabled) {
+      setPushEnabled(false);
+      return;
+    }
+    if (typeof window !== "undefined" && "Notification" in window) {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        setPushEnabled(true);
+        new Notification("EcoSentinel Alert Engine", {
+          body: "Web Push alerts active. We will notify you of any local fire activity or AQI spikes.",
+        });
+      } else {
+        setPushEnabled(false);
+      }
+    } else {
+      setPushEnabled(true);
+    }
+  };
 
   const { airReadings: liveAirReadings, alerts: realtimeAlerts, isConnected, lastUpdate } =
     useRealtimeFeed();
@@ -391,6 +414,26 @@ export function EcoSentinelApp() {
                 </span>
               </button>
               <EcoScoreGauge pm25={currentPm25} fireCount={fireSummary.high_confidence_count} wasteCount={wasteCount} />
+              
+              {/* Push Alerts Toggle */}
+              <button
+                type="button"
+                onClick={togglePushAlerts}
+                className={`w-full rounded-2xl border px-4 py-3 text-left text-xs transition-all duration-300 btn-premium cursor-pointer ${
+                  pushEnabled
+                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.06)]"
+                    : "border-border bg-slate-950/35 text-slate-400 hover:text-white"
+                }`}
+              >
+                <div className="flex items-center justify-between font-semibold">
+                  <span>🔔 Web Push Alerts</span>
+                  <span className="opacity-60">{pushEnabled ? "Active" : "Off"}</span>
+                </div>
+                <span className="mt-1 block text-[10px] opacity-80 leading-normal">
+                  {pushEnabled ? "Receiving local AQI & fire alerts" : "Enable desktop notification alerts"}
+                </span>
+              </button>
+
               <div className="rounded-2xl border border-border bg-slate-950/35 px-4 py-3">
                 <div className="flex items-center gap-2.5">
                   <span className={`h-2.5 w-2.5 rounded-full ${isConnected ? "bg-emerald-400 shadow-[0_0_6px_rgba(74,222,128,0.7)]" : "bg-slate-500"}`} />
@@ -452,7 +495,56 @@ export function EcoSentinelApp() {
                 {activeView === "dashboard" && (
                   <>
                     <div className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(340px,0.85fr)]">
-                      <EcoMap lat={location.lat} lon={location.lon} demoMode={demoMode} />
+                      <div className="flex flex-col gap-4">
+                        {/* Visualization Switcher */}
+                        <div className="flex items-center justify-between rounded-[1.2rem] border border-border bg-slate-950/30 px-5 py-3">
+                          <div>
+                            <p className="text-[10px] uppercase tracking-[0.25em] text-secondary">Spatial Display Mode</p>
+                            <h3 className="text-xs font-semibold text-white mt-0.5">Toggle 3D Holo-Globe or 2D Station Map</h3>
+                          </div>
+                          <div className="flex items-center gap-1.5 rounded-full border border-border bg-slate-950/60 p-1 text-[11px]">
+                            <button
+                              type="button"
+                              onClick={() => setDashboardViz("globe")}
+                              className={`rounded-full px-3.5 py-1.5 font-medium transition-all cursor-pointer ${
+                                dashboardViz === "globe"
+                                  ? "bg-secondary text-slate-950 shadow-md shadow-secondary/15"
+                                  : "text-slate-400 hover:text-white"
+                              }`}
+                            >
+                              3D Globe
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDashboardViz("map")}
+                              className={`rounded-full px-3.5 py-1.5 font-medium transition-all cursor-pointer ${
+                                dashboardViz === "map"
+                                  ? "bg-secondary text-slate-950 shadow-md shadow-secondary/15"
+                                  : "text-slate-400 hover:text-white"
+                              }`}
+                            >
+                              2D Stations
+                            </button>
+                          </div>
+                        </div>
+
+                        <AnimatePresence mode="wait">
+                          <motion.div
+                            key={dashboardViz}
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            transition={{ duration: 0.25 }}
+                            className="min-h-[500px]"
+                          >
+                            {dashboardViz === "globe" ? (
+                              <Globe3d pm25={currentPm25} fireCount={fireSummary.high_confidence_count} demoMode={demoMode} />
+                            ) : (
+                              <EcoMap lat={location.lat} lon={location.lon} demoMode={demoMode} />
+                            )}
+                          </motion.div>
+                        </AnimatePresence>
+                      </div>
                       <AlertsPanel alerts={displayedAlerts} />
                     </div>
                     <AQIChart lat={location.lat} lon={location.lon} demoMode={demoMode} />
