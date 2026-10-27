@@ -87,7 +87,7 @@ async def classify_waste_image(
     lon: float = Form(...),
 ) -> WasteClassification:
     """Classify uploaded waste image from multipart form-data."""
-    image_bytes: bytes = await image.read()
+    image_bytes: bytes = await image.read(MAX_IMAGE_SIZE_BYTES + 1)
     _validate_uploaded_image(image=image, image_bytes=image_bytes)
     return await gemini_client.classify_waste(
         image_bytes=image_bytes, location={"lat": lat, "lon": lon}
@@ -175,7 +175,7 @@ async def verify_waste_cleanup(
             "points_awarded": hotspot.eco_points_awarded,
         }
 
-    after_bytes = await image.read()
+    after_bytes = await image.read(MAX_IMAGE_SIZE_BYTES + 1)
     _validate_uploaded_image(image=image, image_bytes=after_bytes)
 
     before_photo = hotspot.image_base64 or ""
