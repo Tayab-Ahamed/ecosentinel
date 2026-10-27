@@ -43,7 +43,9 @@ class ProphetModelService:
             return "Avoid outdoor activity"
         return "Stay indoors - hazardous"
 
-    async def _fetch_pollutant_history(self, station_id: int, parameter: str = "pm25") -> list[dict[str, Any]]:
+    async def _fetch_pollutant_history(
+        self, station_id: int, parameter: str = "pm25"
+    ) -> list[dict[str, Any]]:
         """Fetch 30 days of historical data for a specific pollutant from OpenAQ client."""
         return await self.openaq_client.get_historical_data(
             station_id=station_id, parameter=parameter, days=30
@@ -105,7 +107,9 @@ class ProphetModelService:
             return cached[1]
 
         try:
-            history = await self._fetch_pollutant_history(station_id=station_id, parameter=parameter)
+            history = await self._fetch_pollutant_history(
+                station_id=station_id, parameter=parameter
+            )
             frame = self._to_dataframe(history)
             if frame.empty:
                 forecast = AirQualityForecast(
