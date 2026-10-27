@@ -68,8 +68,8 @@ function VoiceWaveCanvas({ isActive, analyser, state }: {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let width = canvas.width = 160;
-    let height = canvas.height = 160;
+    const width = canvas.width = 160;
+    const height = canvas.height = 160;
 
     const bufferLength = analyser ? analyser.frequencyBinCount : 64;
     const dataArray = new Uint8Array(bufferLength);
@@ -80,7 +80,7 @@ function VoiceWaveCanvas({ isActive, analyser, state }: {
 
       const centerX = width / 2;
       const centerY = height / 2;
-      let radius = 54;
+      const radius = 54;
 
       if (analyser && isActive) {
         analyser.getByteFrequencyData(dataArray);
